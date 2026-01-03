@@ -1,0 +1,7 @@
+{
+  "name": "MelbGo - 墨爾本旅遊助手",
+  "description": "您的 11 天墨爾本專屬旅遊伴侶。包含澳網、大洋路與市區深度遊。",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
