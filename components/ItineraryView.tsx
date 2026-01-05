@@ -67,22 +67,7 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ days, setDays, onMapClick
       }
   }, [selectedDay]);
 
-  // Memo Handlers
-  const handleMemoChange = (text: string) => {
-      // Update local state immediately for UI responsiveness
-      const updatedDays = [...days];
-      updatedDays[selectedDay].tips = text;
-      // We don't call setDays (Firebase sync) on every keystroke here to avoid excessive writes/renders
-      // But since setDays in App.tsx triggers a re-render of this component, we need to be careful.
-      // Actually, passing the updated object to setDays does modify the state in App.tsx.
-      // For a better UX in a small app, we can update on every change, but debouncing is better.
-      // Here we will update the state directly to keep input responsive, relying on React's batching.
-      setDays(updatedDays);
-  };
-  
-  // Note: App.tsx handles the actual DB write. If setDays writes to DB immediately, 
-  // typing might lag on slow connections. However, since the state is lifted, we must call setDays.
-  // Ideally we would have a local state for the memo and sync on blur. Let's do that.
+  // Memo Handlers - Optimized for performance
   
   // Internal state for Memo to prevent lag
   const [localMemo, setLocalMemo] = useState(currentDay?.tips || '');
@@ -237,7 +222,7 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ days, setDays, onMapClick
               onChange={(e) => setLocalMemo(e.target.value)}
               onBlur={handleMemoBlur}
               placeholder="當日備忘錄 (例如：今晚需換飯店、記得買早餐...)"
-              className="w-full h-20 text-xs text-gray-600 dark:text-gray-300 bg-yellow-50/50 dark:bg-slate-800/50 border border-yellow-100 dark:border-slate-700 rounded-lg p-2 resize-none focus:ring-1 focus:ring-accent outline-none leading-relaxed transition-all"
+              className="w-full h-16 text-xs text-gray-600 dark:text-gray-300 bg-yellow-50/50 dark:bg-slate-800/50 border border-yellow-100 dark:border-slate-700 rounded-lg p-2 resize-none focus:ring-1 focus:ring-accent outline-none leading-relaxed transition-all placeholder-gray-400 dark:placeholder-gray-600"
           />
         </div>
       </div>
@@ -345,155 +330,136 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ days, setDays, onMapClick
                                    href={event.bookingUrl} 
                                    target="_blank" 
                                    rel="noreferrer"
-                                   className="text-[10px] font-bold bg-white/50 hover:bg-white dark:bg-slate-700 dark:hover:bg-slate-600 px-2 py-1 rounded-full border border-black/5 dark:border-slate-600 text-blue-700 dark:text-blue-300 flex items-center gap-1 transition-colors"
+                                   className="text-[10px] font-bold bg-white/50 hover:bg-white dark:bg-slate-700 dark:hover:bg-slate-600 text-primary dark:text-blue-300 px-2 py-1 rounded-md transition-colors"
                                  >
-                                   <LinkIcon className="w-3 h-3"/> 訂單
+                                    <LinkIcon className="w-3 h-3 inline mr-1"/>
+                                    預訂
                                  </a>
                              )}
-                             <button 
-                               onClick={() => handleNavigate(event)}
-                               className="text-[10px] font-bold bg-white/50 hover:bg-white dark:bg-slate-700 dark:hover:bg-slate-600 px-2 py-1 rounded-full border border-black/5 dark:border-slate-600 text-gray-700 dark:text-gray-300 flex items-center gap-1 transition-colors"
-                             >
-                               <MapIcon className="w-3 h-3"/> 導航
+                             <button onClick={() => handleNavigate(event)} className="text-[10px] font-bold bg-white/50 hover:bg-white dark:bg-slate-700 dark:hover:bg-slate-600 text-primary dark:text-blue-300 px-2 py-1 rounded-md transition-colors">
+                                <MapIcon className="w-3 h-3 inline mr-1"/>
+                                導航
                              </button>
                          </div>
                      </div>
                    )}
-                   {event.notes && <p className="text-xs mt-2 italic opacity-70 bg-black/5 dark:bg-white/5 p-2 rounded-lg">{event.notes}</p>}
+
+                   {event.notes && (
+                       <div className="mt-2 text-xs bg-white/50 dark:bg-black/20 p-2 rounded-lg text-gray-600 dark:text-gray-300 whitespace-pre-line">
+                           {event.notes}
+                       </div>
+                   )}
                 </div>
               )}
             </div>
           ))
         )}
-        
-        {/* Add Button */}
-        <div className="flex justify-center pt-4">
-           <button 
-             onClick={handleAddEvent}
-             className="flex items-center space-x-2 text-gray-400 hover:text-primary dark:text-gray-500 dark:hover:text-blue-400 transition-colors"
-           >
-             <div className="w-8 h-8 rounded-full border border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center">
-               <PlusIcon className="w-4 h-4" />
-             </div>
-             <span className="text-sm font-medium">新增行程</span>
-           </button>
-        </div>
       </div>
+
+      {/* Floating Action Button */}
+      <button 
+        onClick={handleAddEvent}
+        className="fixed bottom-20 right-6 w-14 h-14 bg-primary dark:bg-blue-600 text-white rounded-full shadow-lg shadow-primary/40 dark:shadow-blue-900/40 flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-20"
+      >
+        <PlusIcon className="w-8 h-8" />
+      </button>
 
       {/* Edit/Add Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-primary/20 dark:bg-black/50 z-50 flex items-end sm:items-center justify-center backdrop-blur-sm p-4">
-          <div className="bg-white dark:bg-slate-800 w-full max-w-md rounded-3xl p-6 shadow-2xl animate-in slide-in-from-bottom-10 fade-in h-[85vh] sm:h-auto overflow-y-auto">
+          <div className="bg-white dark:bg-slate-800 w-full max-w-md rounded-3xl p-6 shadow-2xl animate-in slide-in-from-bottom-10 fade-in">
             <h3 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">{editingEvent ? '編輯行程' : '新增行程'}</h3>
             
             <div className="space-y-4">
-              <div className="grid grid-cols-3 gap-3">
-                 <div className="col-span-1">
-                   <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">時間</label>
-                   <input 
-                     type="time" 
-                     value={newEventData.time} 
-                     onChange={(e) => setNewEventData({...newEventData, time: e.target.value})}
-                     className="w-full mt-1 p-3 bg-gray-50 text-gray-900 dark:bg-slate-700 dark:text-white rounded-xl border border-gray-100 dark:border-slate-600 focus:ring-2 focus:ring-primary outline-none"
-                   />
-                 </div>
-                 <div className="col-span-2">
-                   <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">類型</label>
-                   <select 
-                     value={newEventData.type}
-                     onChange={(e) => setNewEventData({...newEventData, type: e.target.value as any})}
-                     className="w-full mt-1 p-3 bg-gray-50 text-gray-900 dark:bg-slate-700 dark:text-white rounded-xl border border-gray-100 dark:border-slate-600 focus:ring-2 focus:ring-primary outline-none"
-                   >
-                     <option value="activity">景點/活動 🎡</option>
-                     <option value="food">美食/餐廳 🍔</option>
-                     <option value="transport">交通/移動 🚗</option>
-                     <option value="hotel">住宿/休息 🏨</option>
-                     <option value="flight">航班/機票 ✈️</option>
-                   </select>
-                 </div>
+              <div className="flex gap-4">
+                  <div className="w-1/3">
+                      <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">時間</label>
+                      <input 
+                        type="time" 
+                        value={newEventData.time} 
+                        onChange={(e) => setNewEventData({...newEventData, time: e.target.value})}
+                        className="w-full mt-1 p-3 bg-gray-50 text-gray-900 dark:bg-slate-700 dark:text-white rounded-xl border border-gray-100 dark:border-slate-600 focus:ring-2 focus:ring-primary outline-none text-center font-mono"
+                      />
+                  </div>
+                  <div className="flex-1">
+                      <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">類型</label>
+                      <select 
+                        value={newEventData.type} 
+                        onChange={(e) => setNewEventData({...newEventData, type: e.target.value as any})}
+                        className="w-full mt-1 p-3 bg-gray-50 text-gray-900 dark:bg-slate-700 dark:text-white rounded-xl border border-gray-100 dark:border-slate-600 focus:ring-2 focus:ring-primary outline-none appearance-none"
+                      >
+                          <option value="activity">🎡 景點活動</option>
+                          <option value="food">🍔 美食餐廳</option>
+                          <option value="transport">🚌 交通移動</option>
+                          <option value="hotel">🏨 住宿飯店</option>
+                          <option value="flight">✈️ 航班飛行</option>
+                      </select>
+                  </div>
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">標題</label>
+                 <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">標題</label>
+                 <input 
+                   type="text" 
+                   value={newEventData.title} 
+                   onChange={(e) => setNewEventData({...newEventData, title: e.target.value})}
+                   placeholder="例如：參觀博物館"
+                   className="w-full mt-1 p-3 bg-gray-50 text-gray-900 dark:bg-slate-700 dark:text-white rounded-xl border border-gray-100 dark:border-slate-600 focus:ring-2 focus:ring-primary outline-none"
+                 />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase flex justify-between">
+                    <span>地點 / 位置</span>
+                    <button onClick={getAiSuggestion} disabled={!newEventData.location || loadingAi} className="text-primary dark:text-blue-400 hover:underline disabled:opacity-50">
+                        {loadingAi ? 'AI 思考中...' : '✨ AI 建議'}
+                    </button>
+                </label>
                 <input 
                   type="text" 
-                  placeholder="例如：參觀維多利亞圖書館"
-                  value={newEventData.title} 
-                  onChange={(e) => setNewEventData({...newEventData, title: e.target.value})}
+                  value={newEventData.location} 
+                  onChange={(e) => setNewEventData({...newEventData, location: e.target.value})}
+                  placeholder="輸入地點..."
                   className="w-full mt-1 p-3 bg-gray-50 text-gray-900 dark:bg-slate-700 dark:text-white rounded-xl border border-gray-100 dark:border-slate-600 focus:ring-2 focus:ring-primary outline-none"
                 />
+                {aiTip && (
+                    <div className="mt-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-100 dark:border-yellow-900/30 rounded-lg text-xs text-yellow-800 dark:text-yellow-200 animate-in fade-in">
+                        🤖 {aiTip}
+                    </div>
+                )}
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">地點 (顯示名稱)</label>
-                <div className="flex gap-2">
-                  <input 
-                    type="text" 
-                    placeholder="例如：328 Swanston St"
-                    value={newEventData.location} 
-                    onChange={(e) => setNewEventData({...newEventData, location: e.target.value})}
-                    className="w-full mt-1 p-3 bg-gray-50 text-gray-900 dark:bg-slate-700 dark:text-white rounded-xl border border-gray-100 dark:border-slate-600 focus:ring-2 focus:ring-primary outline-none"
-                  />
-                  <button 
-                    onClick={getAiSuggestion}
-                    disabled={!newEventData.location || loadingAi}
-                    className="mt-1 bg-accent/10 text-accent p-3 rounded-xl hover:bg-accent/20 transition-colors"
-                    title="Ask AI for tips"
-                  >
-                    ✨
-                  </button>
-                </div>
-                {loadingAi && <p className="text-xs text-accent mt-1">AI 思考中...</p>}
-                {aiTip && (
-                  <div className="mt-2 p-2 bg-accent/5 text-accent text-xs rounded-lg border border-accent/10">
-                    <strong>小撇步:</strong> {aiTip}
-                  </div>
-                )}
+                <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">備註 / 訂單號 / 航班資訊</label>
+                <textarea 
+                  value={newEventData.notes || ''} 
+                  onChange={(e) => setNewEventData({...newEventData, notes: e.target.value})}
+                  placeholder="相關細節..."
+                  className="w-full mt-1 p-3 bg-gray-50 text-gray-900 dark:bg-slate-700 dark:text-white rounded-xl border border-gray-100 dark:border-slate-600 focus:ring-2 focus:ring-primary outline-none h-20 resize-none"
+                />
               </div>
               
               <div>
-                <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">導航連結 (Google Maps URL)</label>
-                <input 
-                  type="text" 
-                  placeholder="https://maps.app.goo.gl/..."
-                  value={newEventData.navLink || ''} 
-                  onChange={(e) => setNewEventData({...newEventData, navLink: e.target.value})}
-                  className="w-full mt-1 p-3 bg-gray-50 text-blue-600 dark:bg-slate-700 dark:text-blue-400 rounded-xl border border-gray-100 dark:border-slate-600 focus:ring-2 focus:ring-primary outline-none text-sm font-mono"
-                />
-                <p className="text-[10px] text-gray-400 mt-1">若填寫此欄，按下導航按鈕將直接開啟此連結。</p>
-              </div>
-
-              <div>
-                <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">訂單連結 (選填)</label>
-                <input 
-                  type="text" 
-                  placeholder="https://..."
-                  value={newEventData.bookingUrl || ''} 
-                  onChange={(e) => setNewEventData({...newEventData, bookingUrl: e.target.value})}
-                  className="w-full mt-1 p-3 bg-gray-50 text-gray-900 dark:bg-slate-700 dark:text-white rounded-xl border border-gray-100 dark:border-slate-600 focus:ring-2 focus:ring-primary outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">備註</label>
-                <textarea 
-                  placeholder="訂位代號、注意事項..."
-                  value={newEventData.notes || ''} 
-                  onChange={(e) => setNewEventData({...newEventData, notes: e.target.value})}
-                  className="w-full mt-1 p-3 bg-gray-50 text-gray-900 dark:bg-slate-700 dark:text-white rounded-xl border border-gray-100 dark:border-slate-600 focus:ring-2 focus:ring-primary outline-none h-20 resize-none"
-                />
+                  <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">預訂連結 (Booking URL)</label>
+                  <input 
+                    type="text" 
+                    value={newEventData.bookingUrl || ''} 
+                    onChange={(e) => setNewEventData({...newEventData, bookingUrl: e.target.value})}
+                    placeholder="https://..."
+                    className="w-full mt-1 p-3 bg-gray-50 text-gray-900 dark:bg-slate-700 dark:text-white rounded-xl border border-gray-100 dark:border-slate-600 focus:ring-2 focus:ring-primary outline-none text-xs font-mono"
+                  />
               </div>
 
               <div className="flex gap-3 pt-2">
                 <button 
                   onClick={() => setIsModalOpen(false)}
-                  className="flex-1 py-3 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 font-semibold rounded-xl"
+                  className="flex-1 py-3 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 font-semibold rounded-xl hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors"
                 >
                   取消
                 </button>
                 <button 
                   onClick={handleSaveEvent}
-                  className="flex-1 py-3 bg-primary dark:bg-blue-600 text-white font-semibold rounded-xl shadow-lg shadow-primary/30"
+                  className="flex-1 py-3 bg-primary dark:bg-blue-600 text-white font-semibold rounded-xl shadow-lg shadow-primary/30 dark:shadow-blue-900/30 hover:bg-slate-700 dark:hover:bg-blue-500 transition-colors"
                 >
                   儲存
                 </button>
