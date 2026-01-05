@@ -194,11 +194,7 @@ const TodoView: React.FC<TodoViewProps> = ({ todos, setTodos, categories, setCat
       </div>
 
       {/* List */}
-<<<<<<< HEAD
-      <div className="flex-1 overflow-y-auto p-4 pb-28 space-y-6">
-=======
       <div className="flex-1 overflow-y-auto p-4 pb-28 space-y-6 no-scrollbar">
->>>>>>> cb5f34c (Update:hide scrollbar)
           {categories.map(cat => {
               const items = groupedTodos[cat.id] || [];
               if (items.length === 0) return null;
@@ -265,11 +261,7 @@ const TodoView: React.FC<TodoViewProps> = ({ todos, setTodos, categories, setCat
                  <EditIcon className="w-5 h-5"/> 管理分類
              </h3>
              
-<<<<<<< HEAD
-             <div className="space-y-3 mb-6 max-h-[50vh] overflow-y-auto pr-1">
-=======
              <div className="space-y-3 mb-6 max-h-[50vh] overflow-y-auto pr-1 no-scrollbar">
->>>>>>> cb5f34c (Update:hide scrollbar)
                  {categories.map(cat => (
                      <div key={cat.id} className="flex justify-between items-center p-2 rounded-lg bg-gray-50 dark:bg-slate-700/50">
                          <div className="flex items-center gap-2">

@@ -183,11 +183,7 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ days, setDays, onMapClick
       <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-sm sticky top-0 z-10 transition-colors">
         <div 
             ref={scrollContainerRef}
-<<<<<<< HEAD
-            className="flex overflow-x-auto py-3 px-2 space-x-2 snap-x"
-=======
             className="flex overflow-x-auto py-3 px-2 space-x-2 snap-x no-scrollbar"
->>>>>>> cb5f34c (Update:hide scrollbar)
         >
           {days.map((day, idx) => (
             <button
@@ -232,11 +228,7 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ days, setDays, onMapClick
       </div>
 
       {/* Timeline List */}
-<<<<<<< HEAD
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-28">
-=======
       <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-28 no-scrollbar">
->>>>>>> cb5f34c (Update:hide scrollbar)
         {currentDay.events.length === 0 ? (
            <div className="text-center py-10 text-gray-400 dark:text-gray-500">
              <p>今日尚無行程。</p>
@@ -246,7 +238,7 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ days, setDays, onMapClick
           currentDay.events.map((event) => (
             <div key={event.id} className="relative flex group">
               {/* Time Column */}
-              <div className="flex flex-col items-center mr-4 w-12 pt-1">
+              <div className="flex flex-col items-center mr-4 w-12 pt-1 shrink-0">
                 <span className="text-xs font-bold text-gray-500 dark:text-gray-400 font-mono">{event.time}</span>
                 <div className="h-full w-px bg-gray-200 dark:bg-slate-700 mt-2 mb-2 dashed"></div>
               </div>
@@ -254,23 +246,23 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ days, setDays, onMapClick
               {/* Card Rendering Logic */}
               {event.type === 'flight' && event.flightDetails ? (
                 // Special Flight Card
-                <div className="flex-1 rounded-2xl overflow-hidden shadow-sm border border-gray-100 dark:border-none mb-1 relative transition-transform active:scale-[0.99] bg-white dark:bg-slate-800">
+                <div className="flex-1 rounded-2xl overflow-hidden shadow-sm border border-gray-100 dark:border-none mb-1 relative transition-transform active:scale-[0.99] bg-white dark:bg-slate-800 min-w-0">
                    {/* Scoot Header */}
                    <div className="bg-yellow-400 h-2 w-full"></div>
                    <div className="p-4">
                       <div className="flex justify-between items-start mb-4">
-                          <div className="flex items-center gap-2">
-                             <div className="bg-yellow-400 p-1.5 rounded-full text-black">
+                          <div className="flex items-center gap-2 min-w-0">
+                             <div className="bg-yellow-400 p-1.5 rounded-full text-black shrink-0">
                                  <PlaneIcon className="w-4 h-4" />
                              </div>
-                             <div>
-                                 <span className="text-xs font-bold text-gray-500 uppercase block">{event.flightDetails.airline}</span>
-                                 <span className="text-lg font-black text-gray-900 dark:text-white leading-none">{event.flightDetails.flightNumber}</span>
+                             <div className="min-w-0">
+                                 <span className="text-xs font-bold text-gray-500 uppercase block truncate">{event.flightDetails.airline}</span>
+                                 <span className="text-lg font-black text-gray-900 dark:text-white leading-none truncate block">{event.flightDetails.flightNumber}</span>
                              </div>
                           </div>
                           {event.bookingUrl && (
-                             <a href={event.bookingUrl} target="_blank" rel="noreferrer" className="text-xs font-bold text-blue-600 bg-blue-50 dark:bg-blue-900/30 dark:text-blue-300 px-2 py-1 rounded-md">
-                                 REF: {event.notes?.split('\n')[0]}
+                             <a href={event.bookingUrl} target="_blank" rel="noreferrer" className="text-xs font-bold text-blue-600 bg-blue-50 dark:bg-blue-900/30 dark:text-blue-300 px-2 py-1 rounded-md shrink-0 whitespace-nowrap ml-2">
+                                 REF: {event.notes?.split('\n')[0] || 'LINK'}
                              </a>
                           )}
                       </div>
@@ -284,8 +276,8 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ days, setDays, onMapClick
                               <span className="block text-xs font-bold mt-1 text-gray-800 dark:text-gray-200">{event.time}</span>
                           </div>
                           
-                          <div className="flex-1 px-4 flex flex-col items-center">
-                              <span className="text-[10px] text-gray-400 dark:text-gray-500 mb-1">{event.flightDetails.duration}</span>
+                          <div className="flex-1 px-4 flex flex-col items-center min-w-0">
+                              <span className="text-[10px] text-gray-400 dark:text-gray-500 mb-1 truncate w-full text-center">{event.flightDetails.duration}</span>
                               <div className="w-full h-0.5 bg-gray-200 dark:bg-slate-600 relative">
                                   <div className="absolute -top-1 right-0 w-2 h-2 bg-gray-300 dark:bg-slate-500 rounded-full"></div>
                                   <PlaneIcon className="absolute -top-3 left-1/2 -translate-x-1/2 w-4 h-4 text-yellow-500 rotate-90" />
@@ -297,13 +289,12 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ days, setDays, onMapClick
                               <span className="text-[10px] text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-slate-700 px-1.5 py-0.5 rounded">
                                 {event.flightDetails.arriveTerminal ? `T${event.flightDetails.arriveTerminal}` : 'T-'}
                               </span>
-                              {/* Calculate arrival time logic not implemented in pure UI, assuming title holds info or just show code */}
                           </div>
                       </div>
                       
-                      <div className="flex justify-between items-center pt-3 border-t border-dashed border-gray-200 dark:border-slate-700">
-                          <span className="text-xs text-gray-500 dark:text-gray-400">{event.title}</span>
-                          <div className="flex space-x-2">
+                      <div className="flex justify-between items-center pt-3 border-t border-dashed border-gray-200 dark:border-slate-700 gap-2">
+                          <span className="text-xs text-gray-500 dark:text-gray-400 truncate flex-1 min-w-0">{event.title}</span>
+                          <div className="flex space-x-2 shrink-0">
                              <button onClick={() => handleEditEvent(event)} className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"><EditIcon className="w-4 h-4"/></button>
                              <button onClick={() => handleDeleteEvent(event.id)} className="p-1 text-gray-400 hover:text-red-500"><TrashIcon className="w-4 h-4"/></button>
                           </div>
@@ -312,13 +303,13 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ days, setDays, onMapClick
                 </div>
               ) : (
                 // Standard Card
-                <div className={`flex-1 rounded-2xl p-4 border shadow-sm mb-1 ${getTypeColor(event.type)} dark:border-none relative transition-transform active:scale-[0.99] dark:bg-slate-800 dark:text-gray-100`}>
+                <div className={`flex-1 rounded-2xl p-4 border shadow-sm mb-1 ${getTypeColor(event.type)} dark:border-none relative transition-transform active:scale-[0.99] dark:bg-slate-800 dark:text-gray-100 min-w-0`}>
                    <div className="flex justify-between items-start gap-2">
                       <div className="flex items-start gap-2 flex-1 min-w-0">
                           <div className={`p-1.5 rounded-lg shrink-0 shadow-sm ${event.type === 'food' ? 'bg-orange-100 text-orange-600 dark:bg-orange-900 dark:text-orange-300' : event.type === 'transport' ? 'bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300' : event.type === 'hotel' ? 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300' : 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900 dark:text-emerald-300'}`}>
                               {getTypeIcon(event.type)}
                           </div>
-                          <h3 className="font-bold text-base text-gray-900 dark:text-white leading-tight pt-0.5 break-words">{event.title}</h3>
+                          <h3 className="font-bold text-base text-gray-900 dark:text-white leading-tight pt-0.5 break-words min-w-0">{event.title}</h3>
                       </div>
 
                       <div className="flex space-x-1 shrink-0 ml-1">
@@ -328,9 +319,10 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ days, setDays, onMapClick
                    </div>
                    
                    {event.location && (
-                     <div className="mt-3 flex items-center justify-between">
-                         <p className="text-xs opacity-80 flex items-center truncate max-w-[65%]">
-                           <span className="mr-1">📍</span> {event.location}
+                     <div className="mt-3 flex items-center justify-between gap-2">
+                         <p className="text-xs opacity-80 flex items-center min-w-0 flex-1">
+                           <span className="mr-1 shrink-0">📍</span> 
+                           <span className="truncate block">{event.location}</span>
                          </p>
                          <div className="flex gap-2 shrink-0">
                              {event.bookingUrl && (
@@ -353,7 +345,7 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ days, setDays, onMapClick
                    )}
 
                    {event.notes && (
-                       <div className="mt-2 text-xs bg-white/50 dark:bg-black/20 p-2 rounded-lg text-gray-600 dark:text-gray-300 whitespace-pre-line">
+                       <div className="mt-2 text-xs bg-white/50 dark:bg-black/20 p-2 rounded-lg text-gray-600 dark:text-gray-300 whitespace-pre-line break-words">
                            {event.notes}
                        </div>
                    )}
@@ -375,7 +367,7 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ days, setDays, onMapClick
       {/* Edit/Add Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-primary/20 dark:bg-black/50 z-50 flex items-end sm:items-center justify-center backdrop-blur-sm p-4">
-          <div className="bg-white dark:bg-slate-800 w-full max-w-md rounded-3xl p-6 shadow-2xl animate-in slide-in-from-bottom-10 fade-in">
+          <div className="bg-white dark:bg-slate-800 w-full max-w-md rounded-3xl p-6 shadow-2xl animate-in slide-in-from-bottom-10 fade-in max-h-[90vh] overflow-y-auto no-scrollbar">
             <h3 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">{editingEvent ? '編輯行程' : '新增行程'}</h3>
             
             <div className="space-y-4">

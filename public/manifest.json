@@ -13,13 +13,8 @@
       "type": "image/png"
     }
   ],
-<<<<<<< HEAD
-  "start_url": ".",
-  "scope": ".",
-=======
   "start_url": "./index.html",
   "scope": "./",
->>>>>>> cb5f34c (Update:hide scrollbar)
   "display": "standalone",
   "theme_color": "#1e293b",
   "background_color": "#ffffff",

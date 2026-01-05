@@ -121,11 +121,7 @@ const LinksHub: React.FC<LinksHubProps> = ({ links, setLinks, days, setDays }) =
   };
 
   return (
-<<<<<<< HEAD
-    <div className="p-4 bg-surface dark:bg-darkSurface h-full pb-20 overflow-y-auto transition-colors">
-=======
     <div className="p-4 bg-surface dark:bg-darkSurface h-full pb-20 overflow-y-auto transition-colors no-scrollbar">
->>>>>>> cb5f34c (Update:hide scrollbar)
         <div className="flex justify-between items-center mb-6 px-1">
             <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">我的預訂 & 票券</h2>
             <button 
@@ -140,9 +136,9 @@ const LinksHub: React.FC<LinksHubProps> = ({ links, setLinks, days, setDays }) =
             {allLinks.map((link, idx) => (
                 <div key={`${link.id}-${idx}`} className="relative group">
                     <a href={link.url} target="_blank" rel="noreferrer" className="block bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm hover:shadow-md transition-all border border-gray-100 dark:border-slate-700">
-                        <div className="flex items-start justify-between">
-                            <div>
-                                <div className="flex gap-2 mb-2">
+                        <div className="flex items-start justify-between gap-4">
+                            <div className="min-w-0 flex-1">
+                                <div className="flex gap-2 mb-2 flex-wrap">
                                     <span className={`inline-block px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide transition-colors
                                         ${link.type === 'car' ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300' : 
                                         link.type === 'flight' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' : 
@@ -157,10 +153,10 @@ const LinksHub: React.FC<LinksHubProps> = ({ links, setLinks, days, setDays }) =
                                         </span>
                                     )}
                                 </div>
-                                <h3 className="font-bold text-base text-gray-800 dark:text-gray-100">{link.title}</h3>
-                                <p className="text-gray-500 dark:text-gray-400 text-xs mt-1 truncate max-w-[250px]">{link.details}</p>
+                                <h3 className="font-bold text-base text-gray-800 dark:text-gray-100 truncate">{link.title}</h3>
+                                <p className="text-gray-500 dark:text-gray-400 text-xs mt-1 truncate">{link.details}</p>
                             </div>
-                            <div className="bg-surface dark:bg-slate-700 p-2 rounded-full text-primary dark:text-blue-400">
+                            <div className="bg-surface dark:bg-slate-700 p-2 rounded-full text-primary dark:text-blue-400 shrink-0">
                                 <LinkIcon className="w-5 h-5" />
                             </div>
                         </div>

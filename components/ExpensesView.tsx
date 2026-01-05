@@ -384,19 +384,19 @@ const ExpensesView: React.FC<ExpensesViewProps> = ({ expenses, setExpenses, cate
             const subAmount = isAud ? (exp.amount * exchangeRate) : (exp.amount / exchangeRate);
             
             return (
-            <div key={exp.id} className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-gray-50 dark:border-slate-700 flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg ${category.color}`}>
+            <div key={exp.id} className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-gray-50 dark:border-slate-700 flex justify-between items-center gap-3">
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className={`p-2 rounded-lg shrink-0 ${category.color}`}>
                         {getIconForCategory(category.id)}
                     </div>
-                    <div>
-                        <div className="font-bold text-gray-800 dark:text-white text-sm">{exp.title}</div>
-                        <div className="text-[10px] text-gray-400 mt-1">
+                    <div className="min-w-0 flex-1">
+                        <div className="font-bold text-gray-800 dark:text-white text-sm truncate">{exp.title}</div>
+                        <div className="text-[10px] text-gray-400 mt-1 truncate">
                             <span className="text-primary dark:text-blue-400 font-medium">{exp.payer}</span> 支付 • {exp.involved.join(', ')} 分攤
                         </div>
                     </div>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 shrink-0">
                     <div className="text-right">
                         <span className="font-bold text-gray-800 dark:text-white block">
                             {isAud ? '$' : 'NT$'}{mainAmount.toFixed(isAud ? 2 : 0)}
