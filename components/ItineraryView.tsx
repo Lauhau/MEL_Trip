@@ -216,28 +216,29 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ days, setDays, onMapClick
           ))}
         </div>
         
-        {/* Day Header & Weather */}
-        <div className="px-5 py-4 border-b border-gray-100 dark:border-slate-800 flex justify-between items-start bg-white dark:bg-slate-900 transition-colors">
-          <div className="flex-1 mr-4">
-            <div className="flex items-center gap-2 mb-1">
+        {/* Day Header & Weather & Memo */}
+        <div className="px-5 py-4 border-b border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900 transition-colors">
+          <div className="flex justify-between items-start mb-3">
+            <div className="flex items-center gap-2">
                 <h2 className="text-xl font-bold text-gray-900 dark:text-white">{currentDay.date}</h2>
                 <span className="text-xs font-medium px-2 py-0.5 bg-gray-100 dark:bg-slate-800 rounded text-gray-500 dark:text-gray-400">{currentDay.weekday}</span>
             </div>
-            {/* Editable Memo Field */}
-            <textarea
-                value={localMemo}
-                onChange={(e) => setLocalMemo(e.target.value)}
-                onBlur={handleMemoBlur}
-                placeholder="當日備忘錄 (例如：今晚需換飯店、記得買早餐...)"
-                className="w-full h-20 text-xs text-gray-600 dark:text-gray-300 bg-yellow-50/50 dark:bg-slate-800/50 border border-yellow-100 dark:border-slate-700 rounded-lg p-2 resize-none focus:ring-1 focus:ring-accent outline-none leading-relaxed"
-            />
+            <div className="flex flex-col items-end shrink-0">
+               <div className="flex items-center gap-1">
+                   {currentDay.weather === 'rain' ? <CloudRainIcon className="w-5 h-5 text-blue-400" /> : <SunIcon className="w-5 h-5" />}
+                   <span className="text-lg font-bold text-gray-800 dark:text-white">{currentDay.temp}°</span>
+               </div>
+            </div>
           </div>
-          <div className="flex flex-col items-end shrink-0">
-             <div className="flex items-center gap-1">
-                 {currentDay.weather === 'rain' ? <CloudRainIcon className="w-5 h-5 text-blue-400" /> : <SunIcon className="w-5 h-5" />}
-                 <span className="text-lg font-bold text-gray-800 dark:text-white">{currentDay.temp}°</span>
-             </div>
-          </div>
+          
+          {/* Editable Memo Field - Full Width */}
+          <textarea
+              value={localMemo}
+              onChange={(e) => setLocalMemo(e.target.value)}
+              onBlur={handleMemoBlur}
+              placeholder="當日備忘錄 (例如：今晚需換飯店、記得買早餐...)"
+              className="w-full h-20 text-xs text-gray-600 dark:text-gray-300 bg-yellow-50/50 dark:bg-slate-800/50 border border-yellow-100 dark:border-slate-700 rounded-lg p-2 resize-none focus:ring-1 focus:ring-accent outline-none leading-relaxed transition-all"
+          />
         </div>
       </div>
 
