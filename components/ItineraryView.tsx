@@ -26,6 +26,11 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ days, setDays, onMapClick
   const [hasAutoSelected, setHasAutoSelected] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
+  // Swipe State
+  const [touchStart, setTouchStart] = useState<{x: number, y: number} | null>(null);
+  const [touchEnd, setTouchEnd] = useState<{x: number, y: number} | null>(null);
+  const minSwipeDistance = 50; // px
+
   const currentDay = days[selectedDay];
 
   // Auto-select day based on current date
@@ -157,6 +162,42 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ days, setDays, onMapClick
     }
   };
 
+  // --- Touch Swipe Handlers ---
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null); // Reset touch end
+    setTouchStart({ x: e.targetTouches[0].clientX, y: e.targetTouches[0].clientY });
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd({ x: e.targetTouches[0].clientX, y: e.targetTouches[0].clientY });
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+
+    const distanceX = touchStart.x - touchEnd.x;
+    const distanceY = touchStart.y - touchEnd.y;
+    
+    // Check if horizontal swipe is dominant (more horizontal than vertical movement)
+    // This prevents accidental swipes while scrolling down
+    const isHorizontal = Math.abs(distanceX) > Math.abs(distanceY);
+    const isSwipe = Math.abs(distanceX) > minSwipeDistance;
+
+    if (isHorizontal && isSwipe) {
+      if (distanceX > 0) {
+        // Swiped Left -> Next Day
+        if (selectedDay < days.length - 1) {
+            setSelectedDay(prev => prev + 1);
+        }
+      } else {
+        // Swiped Right -> Previous Day
+        if (selectedDay > 0) {
+            setSelectedDay(prev => prev - 1);
+        }
+      }
+    }
+  };
+
   const getTypeColor = (type: string) => {
     switch (type) {
       case 'food': return 'bg-orange-50 text-orange-800 border-orange-100'; // Amber/Food
@@ -227,11 +268,17 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ days, setDays, onMapClick
         </div>
       </div>
 
-      {/* Timeline List */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-28 no-scrollbar">
+      {/* Timeline List (With Swipe Handlers) */}
+      <div 
+        className="flex-1 overflow-y-auto p-4 space-y-4 pb-28 no-scrollbar min-h-0"
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+      >
         {currentDay.events.length === 0 ? (
            <div className="text-center py-10 text-gray-400 dark:text-gray-500">
              <p>今日尚無行程。</p>
+             <p className="text-xs mt-2 opacity-50">👈 向左或向右 👉 滑動切換日期</p>
              <button onClick={handleAddEvent} className="mt-4 text-primary dark:text-blue-400 font-medium">新增第一站</button>
            </div>
         ) : (
