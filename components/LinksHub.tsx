@@ -124,6 +124,20 @@ const LinksHub: React.FC<LinksHubProps> = ({ links, setLinks, days, setDays, isR
     setIsModalOpen(false);
   };
 
+  // Helper to get Label and Color based on Type
+  const getLinkTypeInfo = (type: string) => {
+    switch (type) {
+        case 'flight': return { label: '航班', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' };
+        case 'hotel': return { label: '住宿', color: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300' };
+        case 'car': return { label: '租車', color: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300' };
+        case 'food': return { label: '美食', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300' };
+        case 'activity': return { label: '活動', color: 'bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-300' };
+        case 'ticket': return { label: '票券', color: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300' };
+        case 'transport': return { label: '交通', color: 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300' };
+        default: return { label: '其他', color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300' };
+    }
+  };
+
   return (
     <div className="p-4 bg-surface dark:bg-darkSurface h-full pb-20 overflow-y-auto transition-colors no-scrollbar">
         <div className="flex justify-between items-center mb-6 px-1">
@@ -139,19 +153,16 @@ const LinksHub: React.FC<LinksHubProps> = ({ links, setLinks, days, setDays, isR
         </div>
         
         <div className="grid gap-4">
-            {allLinks.map((link, idx) => (
+            {allLinks.map((link, idx) => {
+                const typeInfo = getLinkTypeInfo(link.type);
+                return (
                 <div key={`${link.id}-${idx}`} className="relative group">
                     <a href={link.url} target="_blank" rel="noreferrer" className="block bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm hover:shadow-md transition-all border border-gray-100 dark:border-slate-700">
                         <div className="flex items-start justify-between gap-4">
                             <div className="min-w-0 flex-1">
                                 <div className="flex gap-2 mb-2 flex-wrap">
-                                    <span className={`inline-block px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide transition-colors
-                                        ${link.type === 'car' ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300' : 
-                                        link.type === 'flight' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' : 
-                                        link.type === 'hotel' ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300' : 
-                                        link.type === 'ticket' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300' : 
-                                        'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'}`}>
-                                        {link.type === 'car' ? '租車' : link.type === 'flight' ? '航班' : link.type === 'hotel' ? '住宿' : link.type === 'ticket' ? '票券' : '交通'}
+                                    <span className={`inline-block px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide transition-colors ${typeInfo.color}`}>
+                                        {typeInfo.label}
                                     </span>
                                     {!link.isManual && (
                                         <span className="inline-block px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400">
@@ -186,7 +197,7 @@ const LinksHub: React.FC<LinksHubProps> = ({ links, setLinks, days, setDays, isR
                         </div>
                     )}
                 </div>
-            ))}
+            )})}
         </div>
 
         {allLinks.length === 0 && (
