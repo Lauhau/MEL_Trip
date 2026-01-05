@@ -4,7 +4,7 @@ import ItineraryView from './components/ItineraryView';
 import ExpensesView from './components/ExpensesView';
 import LinksHub from './components/LinksHub';
 import TodoView from './components/TodoView';
-import { CalendarIcon, DollarIcon, LinkIcon, ChecklistIcon } from './components/Icons';
+import { CalendarIcon, DollarIcon, LinkIcon, ChecklistIcon, LockIcon, UnlockIcon } from './components/Icons';
 
 // Firebase Imports
 import { db } from './firebase';
@@ -347,6 +347,8 @@ const INITIAL_TODOS: TodoItem[] = [
 ];
 
 const TRIP_ID = 'melbourne-trip-2026';
+const AUTH_TOKEN_KEY = 'melb_auth_token';
+const AUTH_SECRET = 'porter'; // Simple password
 
 // Helper to remove undefined values before sending to Firestore
 const sanitizeData = (data: any) => {
@@ -363,6 +365,40 @@ const App: React.FC = () => {
   const [expenseCategories, setExpenseCategories] = useState<ExpenseCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'offline'>('offline');
+
+  // Authorization State
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authInput, setAuthInput] = useState('');
+  const [authError, setAuthError] = useState(false);
+
+  // Check Local Storage for Auth
+  useEffect(() => {
+    const storedToken = localStorage.getItem(AUTH_TOKEN_KEY);
+    if (storedToken === AUTH_SECRET) {
+        setIsAuthorized(true);
+    }
+  }, []);
+
+  const handleLogin = (e: React.FormEvent) => {
+      e.preventDefault();
+      if (authInput === AUTH_SECRET) {
+          localStorage.setItem(AUTH_TOKEN_KEY, AUTH_SECRET);
+          setIsAuthorized(true);
+          setShowAuthModal(false);
+          setAuthError(false);
+          setAuthInput('');
+      } else {
+          setAuthError(true);
+      }
+  };
+
+  const handleLogout = () => {
+      if (window.confirm('確定要登出嗎？下次編輯需要重新輸入密碼。')) {
+          localStorage.removeItem(AUTH_TOKEN_KEY);
+          setIsAuthorized(false);
+      }
+  };
 
   // Firebase Realtime Listener
   useEffect(() => {
@@ -431,6 +467,7 @@ const App: React.FC = () => {
   // Sync Wrappers - Passed to children components
   // These wrap the state setters to also push to Firebase
   const handleSetDays = (action: React.SetStateAction<DayItinerary[]>) => {
+    if (!isAuthorized) return; // Prevent updates if not authorized
     let newDays: DayItinerary[];
     if (typeof action === 'function') {
         newDays = action(days);
@@ -443,6 +480,7 @@ const App: React.FC = () => {
   };
 
   const handleSetExpenses = (action: React.SetStateAction<Expense[]>) => {
+    if (!isAuthorized) return;
     let newExpenses: Expense[];
     if (typeof action === 'function') {
         newExpenses = action(expenses);
@@ -455,6 +493,7 @@ const App: React.FC = () => {
   };
 
   const handleSetLinks = (action: React.SetStateAction<BookingLink[]>) => {
+    if (!isAuthorized) return;
     let newLinks: BookingLink[];
     if (typeof action === 'function') {
         newLinks = action(links);
@@ -467,6 +506,7 @@ const App: React.FC = () => {
   }
 
   const handleSetTodos = (action: React.SetStateAction<TodoItem[]>) => {
+    if (!isAuthorized) return;
     let newTodos: TodoItem[];
     if (typeof action === 'function') {
         newTodos = action(todos);
@@ -479,6 +519,7 @@ const App: React.FC = () => {
   }
 
   const handleSetTodoCategories = (action: React.SetStateAction<TodoCategory[]>) => {
+    if (!isAuthorized) return;
     let newCats: TodoCategory[];
     if (typeof action === 'function') {
         newCats = action(todoCategories);
@@ -491,6 +532,7 @@ const App: React.FC = () => {
   }
 
   const handleSetExpenseCategories = (action: React.SetStateAction<ExpenseCategory[]>) => {
+    if (!isAuthorized) return;
     let newCats: ExpenseCategory[];
     if (typeof action === 'function') {
         newCats = action(expenseCategories);
@@ -502,10 +544,7 @@ const App: React.FC = () => {
     updateDoc(docRef, { expenseCategories: sanitizeData(newCats) }).catch(e => console.error("Update failed", e));
   }
 
-  // Remove the map click handler since MapView is gone
   const handleItineraryMapClick = () => {
-      // Optional: Maybe open Google Maps? 
-      // For now, we just don't switch view.
       alert("地圖功能已移除，請使用個別行程的導航按鈕。");
   };
 
@@ -545,14 +584,23 @@ const App: React.FC = () => {
                     )}
                 </div>
             </div>
+            
+            {/* Auth Button */}
+            <button 
+                onClick={() => isAuthorized ? handleLogout() : setShowAuthModal(true)}
+                className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
+                title={isAuthorized ? "已授權 (點擊登出)" : "唯讀模式 (點擊授權)"}
+            >
+                {isAuthorized ? <UnlockIcon className="w-5 h-5 text-green-500" /> : <LockIcon className="w-5 h-5 text-gray-400" />}
+            </button>
         </header>
 
         {/* Content Area */}
         <main className="flex-1 overflow-hidden relative">
-            {view === 'itinerary' && <ItineraryView days={days} setDays={handleSetDays} onMapClick={handleItineraryMapClick} />}
-            {view === 'expenses' && <ExpensesView expenses={expenses} setExpenses={handleSetExpenses} categories={expenseCategories} setCategories={handleSetExpenseCategories} />}
-            {view === 'links' && <LinksHub links={links} setLinks={handleSetLinks} days={days} setDays={handleSetDays} />}
-            {view === 'todo' && <TodoView todos={todos} setTodos={handleSetTodos} categories={todoCategories} setCategories={handleSetTodoCategories} />}
+            {view === 'itinerary' && <ItineraryView days={days} setDays={handleSetDays} onMapClick={handleItineraryMapClick} isReadOnly={!isAuthorized} />}
+            {view === 'expenses' && <ExpensesView expenses={expenses} setExpenses={handleSetExpenses} categories={expenseCategories} setCategories={handleSetExpenseCategories} isReadOnly={!isAuthorized} />}
+            {view === 'links' && <LinksHub links={links} setLinks={handleSetLinks} days={days} setDays={handleSetDays} isReadOnly={!isAuthorized} />}
+            {view === 'todo' && <TodoView todos={todos} setTodos={handleSetTodos} categories={todoCategories} setCategories={handleSetTodoCategories} isReadOnly={!isAuthorized} />}
         </main>
 
         {/* Bottom Navigation */}
@@ -589,6 +637,54 @@ const App: React.FC = () => {
                 <span className="text-[9px] font-bold uppercase tracking-widest">票券</span>
             </button>
         </nav>
+
+        {/* Auth Modal */}
+        {showAuthModal && (
+            <div className="fixed inset-0 bg-primary/20 dark:bg-black/50 z-50 flex items-center justify-center backdrop-blur-sm p-4">
+                <div className="bg-white dark:bg-slate-800 w-full max-w-xs rounded-3xl p-6 shadow-2xl animate-in zoom-in-95">
+                    <div className="text-center mb-4">
+                        <div className="w-12 h-12 bg-gray-100 dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <LockIcon className="w-6 h-6 text-gray-500 dark:text-gray-300" />
+                        </div>
+                        <h3 className="text-lg font-bold text-gray-800 dark:text-white">裝置授權</h3>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">請輸入通行密鑰以開啟編輯權限</p>
+                    </div>
+
+                    <form onSubmit={handleLogin} className="space-y-4">
+                        <div>
+                            <input 
+                                type="password" 
+                                value={authInput}
+                                onChange={(e) => {
+                                    setAuthInput(e.target.value);
+                                    setAuthError(false);
+                                }}
+                                placeholder="輸入密鑰"
+                                className={`w-full p-3 bg-gray-50 text-gray-900 dark:bg-slate-700 dark:text-white rounded-xl border-none outline-none focus:ring-2 focus:ring-primary text-center tracking-widest ${authError ? 'ring-2 ring-red-500 bg-red-50 dark:bg-red-900/20' : ''}`}
+                                autoFocus
+                            />
+                            {authError && <p className="text-xs text-red-500 text-center mt-2">密碼錯誤，請再試一次。</p>}
+                        </div>
+
+                        <div className="flex gap-2">
+                            <button 
+                                type="button"
+                                onClick={() => { setShowAuthModal(false); setAuthError(false); setAuthInput(''); }}
+                                className="flex-1 py-3 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 font-bold rounded-xl text-sm"
+                            >
+                                取消
+                            </button>
+                            <button 
+                                type="submit"
+                                className="flex-1 py-3 bg-primary dark:bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-primary/20 dark:shadow-blue-900/30 text-sm"
+                            >
+                                解鎖
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        )}
 
       </div>
     </div>

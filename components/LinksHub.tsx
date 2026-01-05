@@ -7,6 +7,7 @@ interface LinksHubProps {
   setLinks: React.Dispatch<React.SetStateAction<BookingLink[]>>;
   days: DayItinerary[];
   setDays: React.Dispatch<React.SetStateAction<DayItinerary[]>>;
+  isReadOnly?: boolean;
 }
 
 interface ExtendedLink extends BookingLink {
@@ -15,7 +16,7 @@ interface ExtendedLink extends BookingLink {
     eventIndex?: number;
 }
 
-const LinksHub: React.FC<LinksHubProps> = ({ links, setLinks, days, setDays }) => {
+const LinksHub: React.FC<LinksHubProps> = ({ links, setLinks, days, setDays, isReadOnly = false }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingLink, setEditingLink] = useState<ExtendedLink | null>(null);
   const [newLinkData, setNewLinkData] = useState<Partial<BookingLink>>({
@@ -56,12 +57,14 @@ const LinksHub: React.FC<LinksHubProps> = ({ links, setLinks, days, setDays }) =
   }, [links, days]);
 
   const handleAddLink = () => {
+    if (isReadOnly) return;
     setEditingLink(null);
     setNewLinkData({ title: '', url: '', details: '', type: 'ticket' });
     setIsModalOpen(true);
   };
 
   const handleEditLink = (link: ExtendedLink) => {
+    if (isReadOnly) return;
     setEditingLink(link);
     setNewLinkData({ ...link });
     setIsModalOpen(true);
@@ -69,6 +72,7 @@ const LinksHub: React.FC<LinksHubProps> = ({ links, setLinks, days, setDays }) =
 
   const handleDeleteLink = (link: ExtendedLink, e: React.MouseEvent) => {
     e.preventDefault();
+    if (isReadOnly) return;
     
     if (link.isManual) {
         if (window.confirm('確定要刪除這個連結嗎？')) {
@@ -124,12 +128,14 @@ const LinksHub: React.FC<LinksHubProps> = ({ links, setLinks, days, setDays }) =
     <div className="p-4 bg-surface dark:bg-darkSurface h-full pb-20 overflow-y-auto transition-colors no-scrollbar">
         <div className="flex justify-between items-center mb-6 px-1">
             <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">我的預訂 & 票券</h2>
-            <button 
-                onClick={handleAddLink}
-                className="bg-primary dark:bg-blue-600 text-white p-2 rounded-full shadow-lg hover:bg-slate-700 transition-colors"
-            >
-                <PlusIcon className="w-5 h-5" />
-            </button>
+            {!isReadOnly && (
+                <button 
+                    onClick={handleAddLink}
+                    className="bg-primary dark:bg-blue-600 text-white p-2 rounded-full shadow-lg hover:bg-slate-700 transition-colors"
+                >
+                    <PlusIcon className="w-5 h-5" />
+                </button>
+            )}
         </div>
         
         <div className="grid gap-4">
@@ -163,20 +169,22 @@ const LinksHub: React.FC<LinksHubProps> = ({ links, setLinks, days, setDays }) =
                     </a>
                     
                     {/* Action Buttons */}
-                    <div className="absolute top-4 right-14 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                         <button 
-                             onClick={(e) => { e.preventDefault(); handleEditLink(link); }}
-                             className="p-1.5 bg-gray-100 dark:bg-slate-600 text-gray-600 dark:text-gray-200 rounded-full hover:bg-gray-200 dark:hover:bg-slate-500"
-                         >
-                             <EditIcon className="w-3 h-3" />
-                         </button>
-                         <button 
-                             onClick={(e) => handleDeleteLink(link, e)}
-                             className="p-1.5 bg-rose-100 dark:bg-rose-900/50 text-rose-600 dark:text-rose-300 rounded-full hover:bg-rose-200 dark:hover:bg-rose-800/50"
-                         >
-                             <TrashIcon className="w-3 h-3" />
-                         </button>
-                    </div>
+                    {!isReadOnly && (
+                        <div className="absolute top-4 right-14 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                             <button 
+                                 onClick={(e) => { e.preventDefault(); handleEditLink(link); }}
+                                 className="p-1.5 bg-gray-100 dark:bg-slate-600 text-gray-600 dark:text-gray-200 rounded-full hover:bg-gray-200 dark:hover:bg-slate-500"
+                             >
+                                 <EditIcon className="w-3 h-3" />
+                             </button>
+                             <button 
+                                 onClick={(e) => handleDeleteLink(link, e)}
+                                 className="p-1.5 bg-rose-100 dark:bg-rose-900/50 text-rose-600 dark:text-rose-300 rounded-full hover:bg-rose-200 dark:hover:bg-rose-800/50"
+                             >
+                                 <TrashIcon className="w-3 h-3" />
+                             </button>
+                        </div>
+                    )}
                 </div>
             ))}
         </div>
@@ -184,7 +192,7 @@ const LinksHub: React.FC<LinksHubProps> = ({ links, setLinks, days, setDays }) =
         {allLinks.length === 0 && (
             <div className="text-center py-10 text-gray-400 dark:text-gray-500">
                 <p>目前沒有連結。</p>
-                <button onClick={handleAddLink} className="mt-2 text-primary dark:text-blue-400 font-medium">新增一個！</button>
+                {!isReadOnly && <button onClick={handleAddLink} className="mt-2 text-primary dark:text-blue-400 font-medium">新增一個！</button>}
             </div>
         )}
 
@@ -198,7 +206,7 @@ const LinksHub: React.FC<LinksHubProps> = ({ links, setLinks, days, setDays }) =
         </div>
 
         {/* Modal */}
-        {isModalOpen && (
+        {isModalOpen && !isReadOnly && (
         <div className="fixed inset-0 bg-primary/20 dark:bg-black/50 z-50 flex items-end sm:items-center justify-center backdrop-blur-sm p-4">
           <div className="bg-white dark:bg-slate-800 w-full max-w-md rounded-3xl p-6 shadow-2xl animate-in slide-in-from-bottom-10 fade-in">
             <h3 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">

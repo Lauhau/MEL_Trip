@@ -7,9 +7,10 @@ interface ItineraryViewProps {
   days: DayItinerary[];
   setDays: React.Dispatch<React.SetStateAction<DayItinerary[]>>;
   onMapClick: (dayIndex: number) => void;
+  isReadOnly?: boolean;
 }
 
-const ItineraryView: React.FC<ItineraryViewProps> = ({ days, setDays, onMapClick }) => {
+const ItineraryView: React.FC<ItineraryViewProps> = ({ days, setDays, onMapClick, isReadOnly = false }) => {
   const [selectedDay, setSelectedDay] = useState<number>(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<TripEvent | null>(null);
@@ -83,7 +84,7 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ days, setDays, onMapClick
   }, [currentDay]);
 
   const handleMemoBlur = () => {
-      if (localMemo !== currentDay.tips) {
+      if (localMemo !== currentDay.tips && !isReadOnly) {
           const updatedDays = [...days];
           updatedDays[selectedDay].tips = localMemo;
           setDays(updatedDays); // Trigger DB save
@@ -91,6 +92,7 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ days, setDays, onMapClick
   };
 
   const handleAddEvent = () => {
+    if (isReadOnly) return;
     setEditingEvent(null);
     setNewEventData({ time: '09:00', title: '', location: '', type: 'activity', bookingUrl: '', navLink: '' });
     setAiTip('');
@@ -98,6 +100,7 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ days, setDays, onMapClick
   };
 
   const handleEditEvent = (event: TripEvent) => {
+    if (isReadOnly) return;
     setEditingEvent(event);
     setNewEventData({ ...event });
     setAiTip('');
@@ -140,6 +143,7 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ days, setDays, onMapClick
   };
 
   const handleDeleteEvent = (eventId: string) => {
+    if (isReadOnly) return;
     const updatedDays = [...days];
     updatedDays[selectedDay].events = updatedDays[selectedDay].events.filter(e => e.id !== eventId);
     setDays(updatedDays);
@@ -262,8 +266,9 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ days, setDays, onMapClick
               value={localMemo}
               onChange={(e) => setLocalMemo(e.target.value)}
               onBlur={handleMemoBlur}
-              placeholder="當日備忘錄 (例如：今晚需換飯店、記得買早餐...)"
-              className="w-full h-16 text-xs text-gray-600 dark:text-gray-300 bg-yellow-50/50 dark:bg-slate-800/50 border border-yellow-100 dark:border-slate-700 rounded-lg p-2 resize-none focus:ring-1 focus:ring-accent outline-none leading-relaxed transition-all placeholder-gray-400 dark:placeholder-gray-600"
+              disabled={isReadOnly}
+              placeholder={isReadOnly ? "當日備忘錄" : "當日備忘錄 (例如：今晚需換飯店、記得買早餐...)"}
+              className={`w-full h-16 text-xs text-gray-600 dark:text-gray-300 bg-yellow-50/50 dark:bg-slate-800/50 border border-yellow-100 dark:border-slate-700 rounded-lg p-2 resize-none outline-none leading-relaxed transition-all placeholder-gray-400 dark:placeholder-gray-600 ${isReadOnly ? 'opacity-70' : 'focus:ring-1 focus:ring-accent'}`}
           />
         </div>
       </div>
@@ -279,7 +284,7 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ days, setDays, onMapClick
            <div className="text-center py-10 text-gray-400 dark:text-gray-500">
              <p>今日尚無行程。</p>
              <p className="text-xs mt-2 opacity-50">👈 向左或向右 👉 滑動切換日期</p>
-             <button onClick={handleAddEvent} className="mt-4 text-primary dark:text-blue-400 font-medium">新增第一站</button>
+             {!isReadOnly && <button onClick={handleAddEvent} className="mt-4 text-primary dark:text-blue-400 font-medium">新增第一站</button>}
            </div>
         ) : (
           currentDay.events.map((event) => (
@@ -341,10 +346,12 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ days, setDays, onMapClick
                       
                       <div className="flex justify-between items-center pt-3 border-t border-dashed border-gray-200 dark:border-slate-700 gap-2">
                           <span className="text-xs text-gray-500 dark:text-gray-400 truncate flex-1 min-w-0">{event.title}</span>
-                          <div className="flex space-x-2 shrink-0">
-                             <button onClick={() => handleEditEvent(event)} className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"><EditIcon className="w-4 h-4"/></button>
-                             <button onClick={() => handleDeleteEvent(event.id)} className="p-1 text-gray-400 hover:text-red-500"><TrashIcon className="w-4 h-4"/></button>
-                          </div>
+                          {!isReadOnly && (
+                              <div className="flex space-x-2 shrink-0">
+                                 <button onClick={() => handleEditEvent(event)} className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"><EditIcon className="w-4 h-4"/></button>
+                                 <button onClick={() => handleDeleteEvent(event.id)} className="p-1 text-gray-400 hover:text-red-500"><TrashIcon className="w-4 h-4"/></button>
+                              </div>
+                          )}
                       </div>
                    </div>
                 </div>
@@ -359,10 +366,12 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ days, setDays, onMapClick
                           <h3 className="font-bold text-base text-gray-900 dark:text-white leading-tight pt-0.5 break-words min-w-0">{event.title}</h3>
                       </div>
 
-                      <div className="flex space-x-1 shrink-0 ml-1">
-                        <button onClick={() => handleEditEvent(event)} className="p-1 opacity-50 hover:opacity-100"><EditIcon className="w-4 h-4"/></button>
-                        <button onClick={() => handleDeleteEvent(event.id)} className="p-1 opacity-50 hover:opacity-100"><TrashIcon className="w-4 h-4"/></button>
-                      </div>
+                      {!isReadOnly && (
+                          <div className="flex space-x-1 shrink-0 ml-1">
+                            <button onClick={() => handleEditEvent(event)} className="p-1 opacity-50 hover:opacity-100"><EditIcon className="w-4 h-4"/></button>
+                            <button onClick={() => handleDeleteEvent(event.id)} className="p-1 opacity-50 hover:opacity-100"><TrashIcon className="w-4 h-4"/></button>
+                          </div>
+                      )}
                    </div>
                    
                    {event.location && (
@@ -404,15 +413,17 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ days, setDays, onMapClick
       </div>
 
       {/* Floating Action Button */}
-      <button 
-        onClick={handleAddEvent}
-        className="fixed bottom-20 right-6 w-14 h-14 bg-primary dark:bg-blue-600 text-white rounded-full shadow-lg shadow-primary/40 dark:shadow-blue-900/40 flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-20"
-      >
-        <PlusIcon className="w-8 h-8" />
-      </button>
+      {!isReadOnly && (
+        <button 
+            onClick={handleAddEvent}
+            className="fixed bottom-20 right-6 w-14 h-14 bg-primary dark:bg-blue-600 text-white rounded-full shadow-lg shadow-primary/40 dark:shadow-blue-900/40 flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-20"
+        >
+            <PlusIcon className="w-8 h-8" />
+        </button>
+      )}
 
       {/* Edit/Add Modal */}
-      {isModalOpen && (
+      {isModalOpen && !isReadOnly && (
         <div className="fixed inset-0 bg-primary/20 dark:bg-black/50 z-50 flex items-end sm:items-center justify-center backdrop-blur-sm p-4">
           <div className="bg-white dark:bg-slate-800 w-full max-w-md rounded-3xl p-6 shadow-2xl animate-in slide-in-from-bottom-10 fade-in max-h-[90vh] overflow-y-auto no-scrollbar">
             <h3 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">{editingEvent ? '編輯行程' : '新增行程'}</h3>

@@ -7,6 +7,7 @@ interface TodoViewProps {
   setTodos: React.Dispatch<React.SetStateAction<TodoItem[]>>;
   categories: TodoCategory[];
   setCategories: React.Dispatch<React.SetStateAction<TodoCategory[]>>;
+  isReadOnly?: boolean;
 }
 
 const COLOR_PRESETS = [
@@ -26,7 +27,7 @@ const COLOR_PRESETS = [
     'bg-rose-50 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300',
 ];
 
-const TodoView: React.FC<TodoViewProps> = ({ todos, setTodos, categories, setCategories }) => {
+const TodoView: React.FC<TodoViewProps> = ({ todos, setTodos, categories, setCategories, isReadOnly = false }) => {
   const [inputText, setInputText] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('todo');
   
@@ -36,7 +37,7 @@ const TodoView: React.FC<TodoViewProps> = ({ todos, setTodos, categories, setCat
 
   const handleAddTodo = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!inputText.trim()) return;
+    if (!inputText.trim() || isReadOnly) return;
 
     const newItem: TodoItem = {
       id: Date.now().toString(),
@@ -50,10 +51,12 @@ const TodoView: React.FC<TodoViewProps> = ({ todos, setTodos, categories, setCat
   };
 
   const toggleComplete = (id: string) => {
+    if (isReadOnly) return;
     setTodos(todos.map(t => t.id === id ? { ...t, isCompleted: !t.isCompleted } : t));
   };
 
   const deleteTodo = (id: string) => {
+    if (isReadOnly) return;
     setTodos(todos.filter(t => t.id !== id));
   };
 
@@ -84,7 +87,7 @@ const TodoView: React.FC<TodoViewProps> = ({ todos, setTodos, categories, setCat
 
   // Manage Categories Logic
   const handleAddCategory = () => {
-      if (!newCatName.trim()) return;
+      if (!newCatName.trim() || isReadOnly) return;
       
       const newId = `cat_${Date.now()}`;
       // Pick random color
@@ -102,6 +105,7 @@ const TodoView: React.FC<TodoViewProps> = ({ todos, setTodos, categories, setCat
   };
 
   const handleDeleteCategory = (id: string) => {
+      if (isReadOnly) return;
       if (window.confirm('確定要刪除此分類嗎？該分類下的任務將會移至預設分類。')) {
           setCategories(categories.filter(c => c.id !== id));
           
@@ -150,48 +154,50 @@ const TodoView: React.FC<TodoViewProps> = ({ todos, setTodos, categories, setCat
          </div>
       </div>
 
-      {/* Input Area */}
-      <div className="p-4 bg-white dark:bg-slate-900 border-b border-gray-100 dark:border-slate-800 shadow-sm z-10">
-          <form onSubmit={handleAddTodo} className="space-y-3">
-              <input 
-                 type="text" 
-                 value={inputText}
-                 onChange={(e) => setInputText(e.target.value)}
-                 placeholder="新增待辦事項..."
-                 className="w-full p-3 bg-gray-50 text-gray-900 dark:bg-slate-800 dark:text-white rounded-xl border-none outline-none focus:ring-2 focus:ring-primary"
-              />
-              <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
-                  {categories.map(cat => (
-                      <button
-                        key={cat.id}
+      {/* Input Area (Hide if Read Only) */}
+      {!isReadOnly && (
+        <div className="p-4 bg-white dark:bg-slate-900 border-b border-gray-100 dark:border-slate-800 shadow-sm z-10">
+            <form onSubmit={handleAddTodo} className="space-y-3">
+                <input 
+                    type="text" 
+                    value={inputText}
+                    onChange={(e) => setInputText(e.target.value)}
+                    placeholder="新增待辦事項..."
+                    className="w-full p-3 bg-gray-50 text-gray-900 dark:bg-slate-800 dark:text-white rounded-xl border-none outline-none focus:ring-2 focus:ring-primary"
+                />
+                <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
+                    {categories.map(cat => (
+                        <button
+                            key={cat.id}
+                            type="button"
+                            onClick={() => setSelectedCategory(cat.id)}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap border transition-all
+                                ${selectedCategory === cat.id
+                                    ? 'bg-primary border-primary text-white dark:bg-blue-600 dark:border-blue-600' 
+                                    : 'bg-white border-gray-200 text-gray-500 dark:bg-slate-800 dark:border-slate-700 dark:text-gray-400'}`}
+                        >
+                            {getIconForCategory(cat.id)}
+                            {cat.label}
+                        </button>
+                    ))}
+                    <button 
                         type="button"
-                        onClick={() => setSelectedCategory(cat.id)}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap border transition-all
-                            ${selectedCategory === cat.id
-                                ? 'bg-primary border-primary text-white dark:bg-blue-600 dark:border-blue-600' 
-                                : 'bg-white border-gray-200 text-gray-500 dark:bg-slate-800 dark:border-slate-700 dark:text-gray-400'}`}
-                      >
-                          {getIconForCategory(cat.id)}
-                          {cat.label}
-                      </button>
-                  ))}
-                  <button 
-                    type="button"
-                    onClick={() => setIsManageModalOpen(true)}
-                    className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-slate-800 text-gray-400 hover:text-primary dark:hover:text-blue-400 border border-transparent hover:border-gray-300 transition-all shrink-0"
-                  >
-                      <EditIcon className="w-3 h-3" />
-                  </button>
-              </div>
-              <button 
-                type="submit" 
-                disabled={!inputText}
-                className="w-full bg-primary dark:bg-blue-600 text-white font-bold py-3 rounded-xl disabled:opacity-50"
-              >
-                新增
-              </button>
-          </form>
-      </div>
+                        onClick={() => setIsManageModalOpen(true)}
+                        className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-slate-800 text-gray-400 hover:text-primary dark:hover:text-blue-400 border border-transparent hover:border-gray-300 transition-all shrink-0"
+                    >
+                        <EditIcon className="w-3 h-3" />
+                    </button>
+                </div>
+                <button 
+                    type="submit" 
+                    disabled={!inputText}
+                    className="w-full bg-primary dark:bg-blue-600 text-white font-bold py-3 rounded-xl disabled:opacity-50"
+                >
+                    新增
+                </button>
+            </form>
+        </div>
+      )}
 
       {/* List */}
       <div className="flex-1 overflow-y-auto p-4 pb-28 space-y-6 no-scrollbar">
@@ -220,10 +226,11 @@ const TodoView: React.FC<TodoViewProps> = ({ todos, setTodos, categories, setCat
                               >
                                   <button 
                                     onClick={() => toggleComplete(item.id)}
+                                    disabled={isReadOnly}
                                     className={`w-6 h-6 rounded-full border-2 flex items-center justify-center mr-3 transition-colors ${
                                         item.isCompleted 
                                             ? 'bg-emerald-500 border-emerald-500 text-white' 
-                                            : 'border-gray-300 dark:border-gray-500'
+                                            : `border-gray-300 dark:border-gray-500 ${isReadOnly ? 'opacity-50 cursor-not-allowed' : ''}`
                                     }`}
                                   >
                                       {item.isCompleted && <ChecklistIcon className="w-4 h-4" />}
@@ -233,9 +240,11 @@ const TodoView: React.FC<TodoViewProps> = ({ todos, setTodos, categories, setCat
                                       {item.text}
                                   </span>
 
-                                  <button onClick={() => deleteTodo(item.id)} className="p-2 text-gray-300 hover:text-red-400 transition-colors">
-                                      <TrashIcon className="w-4 h-4" />
-                                  </button>
+                                  {!isReadOnly && (
+                                    <button onClick={() => deleteTodo(item.id)} className="p-2 text-gray-300 hover:text-red-400 transition-colors">
+                                        <TrashIcon className="w-4 h-4" />
+                                    </button>
+                                  )}
                               </div>
                           ))}
                       </div>
@@ -254,7 +263,7 @@ const TodoView: React.FC<TodoViewProps> = ({ todos, setTodos, categories, setCat
       </div>
 
       {/* Manage Categories Modal */}
-      {isManageModalOpen && (
+      {isManageModalOpen && !isReadOnly && (
         <div className="fixed inset-0 bg-primary/20 dark:bg-black/50 z-50 flex items-center justify-center backdrop-blur-sm p-4">
           <div className="bg-white dark:bg-slate-800 w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-in fade-in zoom-in-95">
              <h3 className="text-lg font-bold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
