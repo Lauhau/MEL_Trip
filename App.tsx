@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ViewState, DayItinerary, Expense, BookingLink, TodoItem, TodoCategory } from './types';
+import { ViewState, DayItinerary, Expense, BookingLink, TodoItem, TodoCategory, ExpenseCategory } from './types';
 import ItineraryView from './components/ItineraryView';
 import ExpensesView from './components/ExpensesView';
 import LinksHub from './components/LinksHub';
@@ -331,6 +331,15 @@ const INITIAL_CATEGORIES: TodoCategory[] = [
   { id: 'docs', label: '證件文件', color: 'bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300', isDefault: true },
 ];
 
+const INITIAL_EXPENSE_CATEGORIES: ExpenseCategory[] = [
+  { id: 'food', label: '美食', color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300', isDefault: true },
+  { id: 'transport', label: '交通', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300', isDefault: true },
+  { id: 'shopping', label: '購物', color: 'bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300', isDefault: true },
+  { id: 'ticket', label: '票券', color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300', isDefault: true },
+  { id: 'hotel', label: '住宿', color: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300', isDefault: true },
+  { id: 'other', label: '其他', color: 'bg-gray-100 text-gray-700 dark:bg-slate-700 dark:text-gray-300', isDefault: true },
+];
+
 const INITIAL_TODOS: TodoItem[] = [
   { id: '1', text: '確認護照效期', isCompleted: false, category: 'docs' },
   { id: '2', text: '申請澳洲 ETA 電子簽證', isCompleted: false, category: 'docs' },
@@ -351,6 +360,7 @@ const App: React.FC = () => {
   const [links, setLinks] = useState<BookingLink[]>([]);
   const [todos, setTodos] = useState<TodoItem[]>([]);
   const [todoCategories, setTodoCategories] = useState<TodoCategory[]>([]);
+  const [expenseCategories, setExpenseCategories] = useState<ExpenseCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'offline'>('offline');
 
@@ -373,6 +383,12 @@ const App: React.FC = () => {
             setTodoCategories(INITIAL_CATEGORIES);
         }
 
+        if (data.expenseCategories) {
+            setExpenseCategories(data.expenseCategories);
+        } else {
+            setExpenseCategories(INITIAL_EXPENSE_CATEGORIES);
+        }
+
         if (data.todos) {
            setTodos(data.todos);
         } else {
@@ -385,12 +401,14 @@ const App: React.FC = () => {
           expenses: [],
           links: sanitizeData(INITIAL_LINKS),
           todos: sanitizeData(INITIAL_TODOS),
-          todoCategories: sanitizeData(INITIAL_CATEGORIES)
+          todoCategories: sanitizeData(INITIAL_CATEGORIES),
+          expenseCategories: sanitizeData(INITIAL_EXPENSE_CATEGORIES)
         });
         setDays(INITIAL_DAYS);
         setLinks(INITIAL_LINKS);
         setTodos(INITIAL_TODOS);
         setTodoCategories(INITIAL_CATEGORIES);
+        setExpenseCategories(INITIAL_EXPENSE_CATEGORIES);
       }
       setLoading(false);
     }, (error) => {
@@ -402,6 +420,7 @@ const App: React.FC = () => {
           setLinks(INITIAL_LINKS);
           setTodos(INITIAL_TODOS);
           setTodoCategories(INITIAL_CATEGORIES);
+          setExpenseCategories(INITIAL_EXPENSE_CATEGORIES);
           setLoading(false);
       }
     });
@@ -471,6 +490,18 @@ const App: React.FC = () => {
     updateDoc(docRef, { todoCategories: sanitizeData(newCats) }).catch(e => console.error("Update failed", e));
   }
 
+  const handleSetExpenseCategories = (action: React.SetStateAction<ExpenseCategory[]>) => {
+    let newCats: ExpenseCategory[];
+    if (typeof action === 'function') {
+        newCats = action(expenseCategories);
+    } else {
+        newCats = action;
+    }
+    setExpenseCategories(newCats);
+    const docRef = doc(db, "trips", TRIP_ID);
+    updateDoc(docRef, { expenseCategories: sanitizeData(newCats) }).catch(e => console.error("Update failed", e));
+  }
+
   // Remove the map click handler since MapView is gone
   const handleItineraryMapClick = () => {
       // Optional: Maybe open Google Maps? 
@@ -519,7 +550,7 @@ const App: React.FC = () => {
         {/* Content Area */}
         <main className="flex-1 overflow-hidden relative">
             {view === 'itinerary' && <ItineraryView days={days} setDays={handleSetDays} onMapClick={handleItineraryMapClick} />}
-            {view === 'expenses' && <ExpensesView expenses={expenses} setExpenses={handleSetExpenses} />}
+            {view === 'expenses' && <ExpensesView expenses={expenses} setExpenses={handleSetExpenses} categories={expenseCategories} setCategories={handleSetExpenseCategories} />}
             {view === 'links' && <LinksHub links={links} setLinks={handleSetLinks} days={days} setDays={handleSetDays} />}
             {view === 'todo' && <TodoView todos={todos} setTodos={handleSetTodos} categories={todoCategories} setCategories={handleSetTodoCategories} />}
         </main>

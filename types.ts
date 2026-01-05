@@ -1,3 +1,4 @@
+
 export interface FlightDetails {
   flightNumber: string;
   airline: string;
@@ -32,6 +33,13 @@ export interface DayItinerary {
   tips: string; // Used as Memo
 }
 
+export interface ExpenseCategory {
+  id: string;
+  label: string;
+  color: string; // CSS classes
+  isDefault?: boolean;
+}
+
 export interface Expense {
   id: string;
   title: string;
@@ -39,6 +47,7 @@ export interface Expense {
   currency: 'AUD' | 'TWD';
   payer: string;
   involved: string[]; 
+  category: string; // Added category ID
 }
 
 export interface BookingLink {
