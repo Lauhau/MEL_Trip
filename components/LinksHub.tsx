@@ -121,7 +121,11 @@ const LinksHub: React.FC<LinksHubProps> = ({ links, setLinks, days, setDays }) =
   };
 
   return (
+<<<<<<< HEAD
     <div className="p-4 bg-surface dark:bg-darkSurface h-full pb-20 overflow-y-auto transition-colors">
+=======
+    <div className="p-4 bg-surface dark:bg-darkSurface h-full pb-20 overflow-y-auto transition-colors no-scrollbar">
+>>>>>>> cb5f34c (Update:hide scrollbar)
         <div className="flex justify-between items-center mb-6 px-1">
             <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">我的預訂 & 票券</h2>
             <button 

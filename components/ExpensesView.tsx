@@ -64,7 +64,11 @@ const ExpensesView: React.FC<ExpensesViewProps> = ({ expenses, setExpenses }) =>
   }, [expenses]);
 
   return (
+<<<<<<< HEAD
     <div className="p-4 pb-28 h-full overflow-y-auto bg-surface dark:bg-darkSurface transition-colors">
+=======
+    <div className="p-4 pb-28 h-full overflow-y-auto bg-surface dark:bg-darkSurface transition-colors no-scrollbar">
+>>>>>>> cb5f34c (Update:hide scrollbar)
       
       {/* Exchange Rate Calculator */}
       <div className="bg-primary text-white rounded-2xl shadow-lg p-5 mb-6">
@@ -157,7 +161,11 @@ const ExpensesView: React.FC<ExpensesViewProps> = ({ expenses, setExpenses }) =>
             </select>
           </div>
           
+<<<<<<< HEAD
           <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 my-2 overflow-x-auto">
+=======
+          <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 my-2 overflow-x-auto no-scrollbar">
+>>>>>>> cb5f34c (Update:hide scrollbar)
             <span className="whitespace-nowrap">分攤者:</span>
             {USERS.map(u => (
                 <button 

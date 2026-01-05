@@ -183,7 +183,11 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ days, setDays, onMapClick
       <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-sm sticky top-0 z-10 transition-colors">
         <div 
             ref={scrollContainerRef}
+<<<<<<< HEAD
             className="flex overflow-x-auto py-3 px-2 space-x-2 snap-x"
+=======
+            className="flex overflow-x-auto py-3 px-2 space-x-2 snap-x no-scrollbar"
+>>>>>>> cb5f34c (Update:hide scrollbar)
         >
           {days.map((day, idx) => (
             <button
@@ -228,7 +232,11 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ days, setDays, onMapClick
       </div>
 
       {/* Timeline List */}
+<<<<<<< HEAD
       <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-28">
+=======
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-28 no-scrollbar">
+>>>>>>> cb5f34c (Update:hide scrollbar)
         {currentDay.events.length === 0 ? (
            <div className="text-center py-10 text-gray-400 dark:text-gray-500">
              <p>今日尚無行程。</p>
