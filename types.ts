@@ -29,7 +29,7 @@ export interface DayItinerary {
   events: TripEvent[];
   weather: 'sunny' | 'cloudy' | 'rain' | 'partly-cloudy';
   temp: number;
-  tips: string;
+  tips: string; // Used as Memo
 }
 
 export interface Expense {
@@ -49,6 +49,20 @@ export interface BookingLink {
   details: string;
 }
 
-export type ViewState = 'itinerary' | 'expenses' | 'links' | 'map';
+export interface TodoCategory {
+  id: string;
+  label: string;
+  color: string; // CSS classes for background/text
+  isDefault?: boolean;
+}
+
+export interface TodoItem {
+  id: string;
+  text: string;
+  isCompleted: boolean;
+  category: string; // Changed from enum to string ID
+}
+
+export type ViewState = 'itinerary' | 'expenses' | 'links' | 'todo';
 
 export const USERS = ['我', '旅伴']; // Traditional Chinese users

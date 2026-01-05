@@ -12,6 +12,9 @@ export default defineConfig(({ mode }) => {
       outDir: 'dist',
     },
     base: './', // Ensures assets are loaded correctly on GitHub Pages
-    
+    define: {
+      // Stringify the API key to make it available in the client-side code
+      'process.env.API_KEY': JSON.stringify(env.API_KEY),
+    },
   };
 });

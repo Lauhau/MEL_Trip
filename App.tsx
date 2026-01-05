@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { ViewState, DayItinerary, Expense, BookingLink } from './types';
+import { ViewState, DayItinerary, Expense, BookingLink, TodoItem, TodoCategory } from './types';
 import ItineraryView from './components/ItineraryView';
 import ExpensesView from './components/ExpensesView';
 import LinksHub from './components/LinksHub';
-import MapView from './components/MapView';
-import { CalendarIcon, DollarIcon, LinkIcon, MapIcon } from './components/Icons';
+import TodoView from './components/TodoView';
+import { CalendarIcon, DollarIcon, LinkIcon, ChecklistIcon } from './components/Icons';
 
 // Firebase Imports
 import { db } from './firebase';
@@ -323,6 +323,20 @@ const INITIAL_LINKS: BookingLink[] = [
     { id: '4', title: '菲利普島企鵝歸巢', type: 'ticket', url: 'https://www.penguins.org.au/', details: '入場憑證 QR Code' },
 ];
 
+const INITIAL_CATEGORIES: TodoCategory[] = [
+  { id: 'todo', label: '一般待辦', color: 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300', isDefault: true },
+  { id: 'packing', label: '行李準備', color: 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300', isDefault: true },
+  { id: 'shopping', label: '購物清單', color: 'bg-orange-50 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300', isDefault: true },
+  { id: 'gift', label: '伴手禮', color: 'bg-pink-50 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300', isDefault: true },
+  { id: 'docs', label: '證件文件', color: 'bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300', isDefault: true },
+];
+
+const INITIAL_TODOS: TodoItem[] = [
+  { id: '1', text: '確認護照效期', isCompleted: false, category: 'docs' },
+  { id: '2', text: '申請澳洲 ETA 電子簽證', isCompleted: false, category: 'docs' },
+  { id: '3', text: '買轉接頭 (八字型)', isCompleted: false, category: 'packing' },
+];
+
 const TRIP_ID = 'melbourne-trip-2026';
 
 // Helper to remove undefined values before sending to Firestore
@@ -335,7 +349,8 @@ const App: React.FC = () => {
   const [days, setDays] = useState<DayItinerary[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [links, setLinks] = useState<BookingLink[]>([]);
-  const [mapDayIndex, setMapDayIndex] = useState<number>(0);
+  const [todos, setTodos] = useState<TodoItem[]>([]);
+  const [todoCategories, setTodoCategories] = useState<TodoCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'offline'>('offline');
 
@@ -350,21 +365,32 @@ const App: React.FC = () => {
         const data = docSnap.data();
         if (data.days) setDays(data.days);
         if (data.expenses) setExpenses(data.expenses);
-        if (data.links) {
-          setLinks(data.links);
+        if (data.links) setLinks(data.links);
+        
+        if (data.todoCategories) {
+            setTodoCategories(data.todoCategories);
         } else {
-            // Migration for existing data without links
-            setLinks(INITIAL_LINKS);
+            setTodoCategories(INITIAL_CATEGORIES);
+        }
+
+        if (data.todos) {
+           setTodos(data.todos);
+        } else {
+           setTodos(INITIAL_TODOS);
         }
       } else {
         // First time initialization: populate DB with our default data
         await setDoc(docRef, {
           days: sanitizeData(INITIAL_DAYS),
           expenses: [],
-          links: sanitizeData(INITIAL_LINKS)
+          links: sanitizeData(INITIAL_LINKS),
+          todos: sanitizeData(INITIAL_TODOS),
+          todoCategories: sanitizeData(INITIAL_CATEGORIES)
         });
         setDays(INITIAL_DAYS);
         setLinks(INITIAL_LINKS);
+        setTodos(INITIAL_TODOS);
+        setTodoCategories(INITIAL_CATEGORIES);
       }
       setLoading(false);
     }, (error) => {
@@ -374,6 +400,8 @@ const App: React.FC = () => {
       if (days.length === 0) {
           setDays(INITIAL_DAYS);
           setLinks(INITIAL_LINKS);
+          setTodos(INITIAL_TODOS);
+          setTodoCategories(INITIAL_CATEGORIES);
           setLoading(false);
       }
     });
@@ -419,9 +447,35 @@ const App: React.FC = () => {
     updateDoc(docRef, { links: sanitizeData(newLinks) }).catch(e => console.error("Update failed", e));
   }
 
-  const handleOpenMap = (dayIndex: number) => {
-      setMapDayIndex(dayIndex);
-      setView('map');
+  const handleSetTodos = (action: React.SetStateAction<TodoItem[]>) => {
+    let newTodos: TodoItem[];
+    if (typeof action === 'function') {
+        newTodos = action(todos);
+    } else {
+        newTodos = action;
+    }
+    setTodos(newTodos);
+    const docRef = doc(db, "trips", TRIP_ID);
+    updateDoc(docRef, { todos: sanitizeData(newTodos) }).catch(e => console.error("Update failed", e));
+  }
+
+  const handleSetTodoCategories = (action: React.SetStateAction<TodoCategory[]>) => {
+    let newCats: TodoCategory[];
+    if (typeof action === 'function') {
+        newCats = action(todoCategories);
+    } else {
+        newCats = action;
+    }
+    setTodoCategories(newCats);
+    const docRef = doc(db, "trips", TRIP_ID);
+    updateDoc(docRef, { todoCategories: sanitizeData(newCats) }).catch(e => console.error("Update failed", e));
+  }
+
+  // Remove the map click handler since MapView is gone
+  const handleItineraryMapClick = () => {
+      // Optional: Maybe open Google Maps? 
+      // For now, we just don't switch view.
+      alert("地圖功能已移除，請使用個別行程的導航按鈕。");
   };
 
   if (loading) {
@@ -447,11 +501,11 @@ const App: React.FC = () => {
                     {view === 'itinerary' && 'MelbGo 🇦🇺'}
                     {view === 'expenses' && '分帳記帳 💸'}
                     {view === 'links' && '我的預訂 🎫'}
-                    {view === 'map' && '行程地圖 🗺️'}
+                    {view === 'todo' && '待辦清單 ✅'}
                 </h1>
                 <div className="flex items-center gap-2 mt-0.5">
                     <p className="text-[10px] text-gray-400 dark:text-gray-500 font-medium tracking-widest uppercase">
-                        {view === 'itinerary' ? 'Melbourne Trip' : view === 'expenses' ? 'Split Bills' : view === 'links' ? 'Bookings' : 'Navigation'}
+                        {view === 'itinerary' ? 'Melbourne Trip' : view === 'expenses' ? 'Split Bills' : view === 'links' ? 'Bookings' : 'Checklist'}
                     </p>
                     {connectionStatus === 'connected' ? (
                         <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.5)]" title="已連線同步"></span>
@@ -464,10 +518,10 @@ const App: React.FC = () => {
 
         {/* Content Area */}
         <main className="flex-1 overflow-hidden relative">
-            {view === 'itinerary' && <ItineraryView days={days} setDays={handleSetDays} onMapClick={handleOpenMap} />}
+            {view === 'itinerary' && <ItineraryView days={days} setDays={handleSetDays} onMapClick={handleItineraryMapClick} />}
             {view === 'expenses' && <ExpensesView expenses={expenses} setExpenses={handleSetExpenses} />}
             {view === 'links' && <LinksHub links={links} setLinks={handleSetLinks} days={days} setDays={handleSetDays} />}
-            {view === 'map' && <MapView day={days[mapDayIndex]} />}
+            {view === 'todo' && <TodoView todos={todos} setTodos={handleSetTodos} categories={todoCategories} setCategories={handleSetTodoCategories} />}
         </main>
 
         {/* Bottom Navigation */}
@@ -481,11 +535,11 @@ const App: React.FC = () => {
             </button>
 
             <button 
-                onClick={() => setView('map')}
-                className={`flex flex-col items-center space-y-1 w-12 transition-all duration-300 ${view === 'map' ? 'text-primary dark:text-blue-400 scale-110' : 'text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400'}`}
+                onClick={() => setView('todo')}
+                className={`flex flex-col items-center space-y-1 w-12 transition-all duration-300 ${view === 'todo' ? 'text-primary dark:text-blue-400 scale-110' : 'text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400'}`}
             >
-                <MapIcon className="w-6 h-6" />
-                <span className="text-[9px] font-bold uppercase tracking-widest">地圖</span>
+                <ChecklistIcon className="w-6 h-6" />
+                <span className="text-[9px] font-bold uppercase tracking-widest">待辦</span>
             </button>
 
             <button 

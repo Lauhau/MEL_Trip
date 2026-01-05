@@ -67,6 +67,39 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ days, setDays, onMapClick
       }
   }, [selectedDay]);
 
+  // Memo Handlers
+  const handleMemoChange = (text: string) => {
+      // Update local state immediately for UI responsiveness
+      const updatedDays = [...days];
+      updatedDays[selectedDay].tips = text;
+      // We don't call setDays (Firebase sync) on every keystroke here to avoid excessive writes/renders
+      // But since setDays in App.tsx triggers a re-render of this component, we need to be careful.
+      // Actually, passing the updated object to setDays does modify the state in App.tsx.
+      // For a better UX in a small app, we can update on every change, but debouncing is better.
+      // Here we will update the state directly to keep input responsive, relying on React's batching.
+      setDays(updatedDays);
+  };
+  
+  // Note: App.tsx handles the actual DB write. If setDays writes to DB immediately, 
+  // typing might lag on slow connections. However, since the state is lifted, we must call setDays.
+  // Ideally we would have a local state for the memo and sync on blur. Let's do that.
+  
+  // Internal state for Memo to prevent lag
+  const [localMemo, setLocalMemo] = useState(currentDay?.tips || '');
+  
+  // Sync local memo when day changes
+  useEffect(() => {
+      setLocalMemo(currentDay?.tips || '');
+  }, [currentDay]);
+
+  const handleMemoBlur = () => {
+      if (localMemo !== currentDay.tips) {
+          const updatedDays = [...days];
+          updatedDays[selectedDay].tips = localMemo;
+          setDays(updatedDays); // Trigger DB save
+      }
+  };
+
   const handleAddEvent = () => {
     setEditingEvent(null);
     setNewEventData({ time: '09:00', title: '', location: '', type: 'activity', bookingUrl: '', navLink: '' });
@@ -185,21 +218,25 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ days, setDays, onMapClick
         
         {/* Day Header & Weather */}
         <div className="px-5 py-4 border-b border-gray-100 dark:border-slate-800 flex justify-between items-start bg-white dark:bg-slate-900 transition-colors">
-          <div>
-            <div className="flex items-center gap-2">
+          <div className="flex-1 mr-4">
+            <div className="flex items-center gap-2 mb-1">
                 <h2 className="text-xl font-bold text-gray-900 dark:text-white">{currentDay.date}</h2>
                 <span className="text-xs font-medium px-2 py-0.5 bg-gray-100 dark:bg-slate-800 rounded text-gray-500 dark:text-gray-400">{currentDay.weekday}</span>
             </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{currentDay.tips}</p>
+            {/* Editable Memo Field */}
+            <textarea
+                value={localMemo}
+                onChange={(e) => setLocalMemo(e.target.value)}
+                onBlur={handleMemoBlur}
+                placeholder="當日備忘錄 (例如：今晚需換飯店、記得買早餐...)"
+                className="w-full h-20 text-xs text-gray-600 dark:text-gray-300 bg-yellow-50/50 dark:bg-slate-800/50 border border-yellow-100 dark:border-slate-700 rounded-lg p-2 resize-none focus:ring-1 focus:ring-accent outline-none leading-relaxed"
+            />
           </div>
-          <div className="flex flex-col items-end">
+          <div className="flex flex-col items-end shrink-0">
              <div className="flex items-center gap-1">
                  {currentDay.weather === 'rain' ? <CloudRainIcon className="w-5 h-5 text-blue-400" /> : <SunIcon className="w-5 h-5" />}
                  <span className="text-lg font-bold text-gray-800 dark:text-white">{currentDay.temp}°</span>
              </div>
-             <button onClick={() => onMapClick(selectedDay)} className="text-xs text-accent font-semibold mt-1 flex items-center gap-1">
-                 查看地圖 <MapIcon className="w-3 h-3"/>
-             </button>
           </div>
         </div>
       </div>
