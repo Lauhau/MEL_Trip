@@ -10,6 +10,9 @@ import { CalendarIcon, DollarIcon, LinkIcon, ChecklistIcon, LockIcon, UnlockIcon
 import { db } from './firebase';
 import { doc, onSnapshot, setDoc, updateDoc } from 'firebase/firestore';
 
+// version control to force update firebase data when code changes
+const DATA_VERSION = 2;
+
 // Detailed Itinerary Data
 const INITIAL_DAYS: DayItinerary[] = [
   {
@@ -105,33 +108,97 @@ const INITIAL_DAYS: DayItinerary[] = [
     weekday: '週六',
     weather: 'sunny',
     temp: 25,
-    tips: '大洋路彎道多，請小心駕駛；記得右駕靠左。',
+    tips: '大洋路彎道多，請小心駕駛；記得右駕靠左。\n晚上觀星推薦 Marengo Beach。',
     events: [
-      { id: '4-0', time: '10:15', title: '前往 Footscray 取車', location: '300 Spencer St to Footscray', lat: -37.8119, lng: 144.9536, type: 'transport', notes: '建議搭乘 Uber/Didi (約15分鐘) 攜帶行李較方便。' },
+      { 
+        id: '4-0', 
+        time: '11:00', 
+        title: '出發: 前往大洋路', 
+        location: 'Melbourne CBD', 
+        lat: -37.8136, 
+        lng: 144.9631, 
+        type: 'transport', 
+        notes: '睡飽出發，導航設定：Geelong Waterfront。' 
+      },
       { 
         id: '4-1', 
-        time: '11:00', 
-        title: 'SIXT 取車: Toyota Yaris', 
-        location: 'SIXT Car Rental Footscray', 
-        lat: -37.8030, 
-        lng: 144.9020, 
-        type: 'transport', 
-        notes: 'Booking: 9729138629. 記得攜帶駕照/譯本。',
-        bookingUrl: 'https://mail.google.com/mail/u/0/?ogbl#search/sixt/FMfcgzQdzwHKBFvZVxCLZzsKMsMqBlbV'
+        time: '12:15', 
+        title: '吉朗 (Geelong) 午餐', 
+        location: 'Geelong Waterfront', 
+        lat: -38.1499, 
+        lng: 144.3617, 
+        type: 'food', 
+        notes: '推薦: Wah Wah Gee 或碼頭邊餐廳。\n必看著名的彩繪木偶。' 
       },
-      { id: '4-2', time: '12:30', title: '托爾坎衝浪海灘', location: 'Torquay Surf Beach', lat: -38.3324, lng: 144.3159, type: 'activity', notes: '大洋路起點' },
-      { id: '4-3', time: '13:30', title: '洛恩小鎮午餐', location: 'Lorne', lat: -38.5415, lng: 143.9754, type: 'food', notes: '美麗的海濱小鎮' },
-      { id: '4-4', time: '16:00', title: '阿波羅灣', location: 'Apollo Bay', lat: -38.7558, lng: 143.6558, type: 'activity', notes: '中途休息點' },
+      { 
+        id: '4-2', 
+        time: '14:15', 
+        title: '大洋路紀念牌樓', 
+        location: 'Great Ocean Road Memorial Arch', 
+        lat: -38.4396, 
+        lng: 144.0175, 
+        type: 'activity', 
+        notes: '經典打卡點，停留約 15 分鐘。' 
+      },
+      { 
+        id: '4-3', 
+        time: '15:00', 
+        title: '洛恩 (Lorne) 下午茶', 
+        location: 'Lorne Beach', 
+        lat: -38.5415, 
+        lng: 143.9754, 
+        type: 'food', 
+        notes: '大洋路最熱鬧小鎮，買杯咖啡去海灘發呆。' 
+      },
+      { 
+        id: '4-4', 
+        time: '16:15', 
+        title: '尋找野生無尾熊', 
+        location: 'Kennett River Nature Walk', 
+        lat: -38.6677, 
+        lng: 143.8596, 
+        type: 'activity', 
+        notes: '導航: Kafe Koala。\n沿著 Grey River Rd 往上走，抬頭找尤加利樹。' 
+      },
       { 
         id: '4-5', 
-        time: '18:00', 
+        time: '17:30', 
         title: '入住: Apollo Stay', 
         location: '38 Thomson Street, Apollo Bay', 
         lat: -38.7560, 
         lng: 143.6560, 
         type: 'hotel', 
-        notes: 'Check-in: 15:00~20:00',
-        bookingUrl: 'https://secure.booking.com/confirmation.zh-tw.html?label=mkt123sc-d7a379ea-aab6-4237-b9c5-b29721aadb1f&sid=e6ffd707b4250120589a18d560ea263f&aid=1536461&auth_key=sk2PHyKEv8wF0rTa&source=mytrips'
+        notes: 'Check-in 辦理入住。' 
+      },
+      { 
+        id: '4-6', 
+        time: '18:00', 
+        title: '晚餐時間', 
+        location: 'Apollo Bay Fishermen\'s Co-Op', 
+        lat: -38.7570, 
+        lng: 143.6680, 
+        type: 'food', 
+        notes: '推薦新鮮海鮮/炸魚薯條 (留意營業時間)。\n備案: Great Ocean Road Brewhouse。' 
+      },
+      { 
+        id: '4-7', 
+        time: '19:45', 
+        title: '馬里納瞭望台看夕陽', 
+        location: 'Marriner\'s Lookout', 
+        lat: -38.7408, 
+        lng: 143.6669, 
+        type: 'activity', 
+        notes: '開車上山10分鐘+走路5分鐘。俯瞰海灣形狀最佳點。' 
+      },
+      { 
+        id: '4-8', 
+        time: '21:00', 
+        title: '觀星時光 ✨', 
+        location: 'Marengo Beach', 
+        lat: -38.7750, 
+        lng: 143.6600, 
+        type: 'activity', 
+        notes: '鎮中心往西 5 分鐘，無光害適合聽海浪看星星。' 
       },
     ]
   },
@@ -141,21 +208,97 @@ const INITIAL_DAYS: DayItinerary[] = [
     weekday: '週日',
     weather: 'partly-cloudy',
     temp: 23,
-    tips: '清晨前往十二使徒岩可避開人潮。',
+    tips: '08:00 準時出發是關鍵！早晨光線拍十二門徒岩最美且順光。',
     events: [
-      { id: '5-1', time: '09:00', title: '十二使徒岩', location: 'Twelve Apostles', lat: -38.6621, lng: 143.1051, type: 'activity', notes: '經典地標' },
-      { id: '5-2', time: '10:30', title: '倫敦拱橋 & 石窟', location: 'London Bridge', lat: -38.6235, lng: 142.9304, type: 'activity', notes: '大自然的鬼斧神工' },
-      { id: '5-3', time: '13:00', title: '驅車前往格蘭屏', location: 'Grampians Road', lat: -37.5, lng: 142.5, type: 'transport', notes: '往內陸前進' },
+      { 
+        id: '5-0', 
+        time: '07:00', 
+        title: '早餐: 扇貝派', 
+        location: 'Apollo Bay Bakery', 
+        lat: -38.7550, 
+        lng: 143.6550, 
+        type: 'food', 
+        notes: '著名的 Scallop Pie，可外帶當早餐。' 
+      },
+      { 
+        id: '5-1', 
+        time: '09:20', 
+        title: '十二門徒岩', 
+        location: 'Twelve Apostles', 
+        lat: -38.6621, 
+        lng: 143.1051, 
+        type: 'activity', 
+        notes: '早晨順光，避開旅行團人潮。' 
+      },
+      { 
+        id: '5-2', 
+        time: '10:30', 
+        title: '洛克阿德峽谷', 
+        location: 'Loch Ard Gorge', 
+        lat: -38.6477, 
+        lng: 143.0697, 
+        type: 'activity', 
+        notes: '必去！走下階梯到沙灘，感受被懸崖包圍。' 
+      },
+      { 
+        id: '5-3', 
+        time: '12:00', 
+        title: '坎貝爾港午餐', 
+        location: 'Port Campbell', 
+        lat: -38.6186, 
+        lng: 142.9961, 
+        type: 'food', 
+        notes: '離開海岸前的最後補給站。' 
+      },
       { 
         id: '5-4', 
-        time: '16:30', 
+        time: '13:00', 
+        title: '前往格蘭屏 (Halls Gap)', 
+        location: 'C172 to Halls Gap', 
+        lat: -37.5000, 
+        lng: 142.6000, 
+        type: 'transport', 
+        notes: '車程約 2.5 小時，欣賞內陸田野風光。' 
+      },
+      { 
+        id: '5-5', 
+        time: '16:00', 
         title: '入住: Mountain View Motor Inn', 
         location: '4236 Ararat-Halls Gap Road, Halls Gap', 
         lat: -37.1550, 
         lng: 142.5350, 
         type: 'hotel', 
-        notes: '山景汽車旅館和度假小屋',
-        bookingUrl: 'https://secure.booking.com/confirmation.zh-tw.html?label=mkt123sc-d7a379ea-aab6-4237-b9c5-b29721aadb1f&sid=e6ffd707b4250120589a18d560ea263f&aid=1536461&auth_key=SqXbY6BoFNUqmawu&source=mytrips'
+        notes: 'Check-in。' 
+      },
+      { 
+        id: '5-6', 
+        time: '16:30', 
+        title: '陽台岩 (The Balconies)', 
+        location: 'The Balconies Carpark', 
+        lat: -37.1084, 
+        lng: 142.4842, 
+        type: 'activity', 
+        notes: '輕鬆步道，看像怪獸嘴巴的奇岩 "Jaws of Death"。' 
+      },
+      { 
+        id: '5-7', 
+        time: '17:45', 
+        title: '博若卡瞭望台 (夕陽)', 
+        location: 'Boroka Lookout', 
+        lat: -37.1235, 
+        lng: 142.5028, 
+        type: 'activity', 
+        notes: '不用爬山，車子直達。俯瞰平原與湖泊的絕佳日落點。' 
+      },
+      { 
+        id: '5-8', 
+        time: '19:00', 
+        title: '山區晚餐', 
+        location: 'Halls Gap', 
+        lat: -37.1376, 
+        lng: 142.5186, 
+        type: 'food', 
+        notes: '注意：餐廳關得早，建議先訂位。小心袋鼠出沒。' 
       },
     ]
   },
@@ -165,14 +308,69 @@ const INITIAL_DAYS: DayItinerary[] = [
     weekday: '週一',
     weather: 'cloudy',
     temp: 22,
-    tips: '黃昏時段開車請務必小心袋鼠衝出。',
+    tips: '導航請設 "Sundial Carpark" 走輕鬆路線登頂。回程小心麥肯齊瀑布的陡峭階梯。',
     events: [
-      { id: '6-1', time: '09:00', title: 'Boroka 觀景台', location: 'Boroka Lookout', lat: -37.1235, lng: 142.5028, type: 'activity', notes: '俯瞰壯麗山谷' },
-      { id: '6-2', time: '11:00', title: 'Brambuk 文化中心', location: 'Brambuk Cultural Centre', lat: -37.1472, lng: 142.5273, type: 'activity', notes: '原住民歷史' },
-      { id: '6-3', time: '15:00', title: '返回墨爾本', location: 'Western Highway', lat: -37.5, lng: 143.5, type: 'transport', notes: '約 3.5 小時車程' },
+      { 
+        id: '6-0', 
+        time: '08:30', 
+        title: '退房 & 買午餐', 
+        location: 'Halls Gap Bakery', 
+        lat: -37.1376, 
+        lng: 142.5186, 
+        type: 'food', 
+        notes: '買三明治或派帶在身上，山上無補給。' 
+      },
+      { 
+        id: '6-1', 
+        time: '09:00', 
+        title: '尖塔健行 (The Pinnacle)', 
+        location: 'Sundial Carpark', 
+        lat: -37.1648, 
+        lng: 142.5076, 
+        type: 'activity', 
+        notes: '⚠️導航設定: Sundial Carpark (非 Wonderland)。\n較輕鬆路線，來回 4.2km (約2小時)，景色無敵。' 
+      },
+      { 
+        id: '6-2', 
+        time: '11:30', 
+        title: '休息 & 野餐', 
+        location: 'Grampians National Park', 
+        type: 'food', 
+        notes: '享用稍早買的午餐。' 
+      },
+      { 
+        id: '6-3', 
+        time: '12:30', 
+        title: '麥肯齊瀑布', 
+        location: 'MacKenzie Falls', 
+        lat: -37.1105, 
+        lng: 142.4132, 
+        type: 'activity', 
+        notes: '維州最大瀑布之一。走到底部最美，回程階梯陡峭請保留體力。' 
+      },
       { 
         id: '6-4', 
-        time: '18:00', 
+        time: '14:30', 
+        title: '袋鼠道別', 
+        location: 'Halls Gap Recreation Reserve', 
+        lat: -37.1350, 
+        lng: 142.5150, 
+        type: 'activity', 
+        notes: '板球場附近通常有大量野生袋鼠吃草。' 
+      },
+      { 
+        id: '6-5', 
+        time: '15:00', 
+        title: '開車返回墨爾本', 
+        location: 'Western Highway', 
+        lat: -37.5, 
+        lng: 143.5, 
+        type: 'transport', 
+        notes: '車程約 3~3.5 小時。' 
+      },
+      { 
+        id: '6-6', 
+        time: '18:30', 
         title: '入住: City Apartment (Bozhu)', 
         location: '371 Little Lonsdale Street', 
         lat: -37.8115, 
@@ -409,7 +607,20 @@ const App: React.FC = () => {
       setConnectionStatus('connected');
       if (docSnap.exists()) {
         const data = docSnap.data();
-        if (data.days) setDays(data.days);
+
+        // VERSION CHECK: If db version is undefined or lower than current code version, FORCE UPDATE
+        if (!data.version || data.version < DATA_VERSION) {
+            console.log("Updating DB to version " + DATA_VERSION);
+            await updateDoc(docRef, { 
+                days: sanitizeData(INITIAL_DAYS),
+                version: DATA_VERSION
+            });
+            // We set local state here, but the snapshot will trigger again immediately with new data
+            setDays(INITIAL_DAYS); 
+        } else {
+            if (data.days) setDays(data.days);
+        }
+
         if (data.expenses) setExpenses(data.expenses);
         if (data.links) setLinks(data.links);
         
@@ -438,7 +649,8 @@ const App: React.FC = () => {
           links: sanitizeData(INITIAL_LINKS),
           todos: sanitizeData(INITIAL_TODOS),
           todoCategories: sanitizeData(INITIAL_CATEGORIES),
-          expenseCategories: sanitizeData(INITIAL_EXPENSE_CATEGORIES)
+          expenseCategories: sanitizeData(INITIAL_EXPENSE_CATEGORIES),
+          version: DATA_VERSION
         });
         setDays(INITIAL_DAYS);
         setLinks(INITIAL_LINKS);
